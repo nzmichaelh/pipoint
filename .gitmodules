@@ -1,0 +1,3 @@
+[submodule "src/juju.net.nz/pipoint/vendor/gobot.io/x/gobot"]
+	path = src/juju.net.nz/pipoint/vendor/gobot.io/x/gobot
+	url = https://github.com/hybridgroup/gobot
