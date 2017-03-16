@@ -1,0 +1,19 @@
+---
+- name: Install access point packages
+  apt: name=dnsmasq,hostapd
+- name: Rename the USB Wifi to a port name
+  template: src=r8712u.conf dest=/etc/modprobe.d/r8712u.conf
+- name: Disable dhcpcd for the access point
+  lineinfile: name=/etc/dhcpcd.conf line="denyinterfaces {{apif}}" state=present
+- name: Set up the loopback interface
+  template: src=interfaces dest=/etc/network/interfaces
+- name: Set up the client interface
+  template: src=interfaces-wlan dest=/etc/network/interfaces.d/{{wlan}}
+- name: Set up the access point interface
+  template: src=interfaces-apif dest=/etc/network/interfaces.d/{{apif}}
+- name: Set up hostapd
+  template: src=hostapd.conf dest=/etc/hostapd/hostapd.{{apif}}.conf
+- name: Set up dnsmasq
+  template: src=dnsmasq.conf dest=/etc/dnsmasq.conf
+- name: Set up dnsmasq on apif
+  template: src=dnsmasq.conf-apif dest=/etc/dnsmasq.d/{{apif}}.conf

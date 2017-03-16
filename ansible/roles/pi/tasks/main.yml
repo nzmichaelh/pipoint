@@ -1,0 +1,25 @@
+---
+# - name: Update APT package cache
+#   action: apt update_cache=yes
+# - name: Upgrade APT to the lastest packages
+#   action: apt upgrade=safe
+- include: accesspoint.yml
+- name: Set the hostname
+  hostname: name="pi-{{hostid}}"
+- name: Add the user
+  user:
+    name: juju
+    password: '$6$3/nNUZfJvg9V9$9OkDm4wO25wyuNJq0Iw3Pw15uCmcUoLBkq/8C0HuRR2vRtrcJVXU6VU6k0d9/gSCWkoEBNDAkHAubZ.wrT43H.'
+    groups: sudo,dialout
+    state: present
+- name: Set authorized keys
+  authorized_key:
+    user: juju
+    state: present
+    key: "{{ lookup('file', '/home/michaelh/.ssh/id_rsa.pub') }}"
+- name: Install the basics
+  apt: name=jed,git,psmisc,unzip,git
+- name: Install emacs
+  apt: name=emacs-nox,yaml-mode,exuberant-ctags,ispell
+- name: Install the dev bits
+  apt: name=build-essential,man,manpages-posix-dev,ack-grep,screen

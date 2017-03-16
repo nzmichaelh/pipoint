@@ -1,0 +1,5 @@
+auto {{apif}}
+iface {{apif}} inet static
+    address 192.168.101.1
+    netmask 255.255.255.0
+    hostapd /etc/hostapd/hostapd.{{apif}}.conf

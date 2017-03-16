@@ -1,0 +1,11 @@
+---
+- name: Ansible Playbook for configuring brand new Raspberry Pi
+  hosts: pis
+  vars:
+    - wlan: wlp1s0
+    - apif: wlan0
+    - hostid: "{{ansible_default_ipv4.macaddress | hash('sha1') | regex_replace('(...).*', '\\1')}}"
+  roles:
+    - pi
+  remote_user: pi
+  become: yes
