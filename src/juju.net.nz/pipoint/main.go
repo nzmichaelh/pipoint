@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	adaptor := mavlink.NewAdaptor("192.168.0.93:14550")
+	adaptor := mavlink.NewUDPAdaptor(":14550")
 	iris := mavlink.NewDriver(adaptor)
 
 	work := func() {
@@ -29,24 +29,24 @@ func main() {
 			))
 		})
 		
-		iris.Once(iris.Event(mavlink.PacketEvent), func(data interface{}) {
-			fmt.Println("packet")
-			packet := data.(*common.MAVLinkPacket)
+		// iris.Once(iris.Event(mavlink.PacketEvent), func(data interface{}) {
+		// 	fmt.Println("packet")
+		// 	packet := data.(*common.MAVLinkPacket)
 
-			dataStream := common.NewRequestDataStream(100,
-				packet.SystemID,
-				packet.ComponentID,
-				4,
-				1,
-			)
-			iris.SendPacket(common.CraftMAVLinkPacket(packet.SystemID,
-				packet.ComponentID,
-				dataStream,
-			))
-		})
+		// 	dataStream := common.NewRequestDataStream(100,
+		// 		packet.SystemID,
+		// 		packet.ComponentID,
+		// 		4,
+		// 		1,
+		// 	)
+		// 	iris.SendPacket(common.CraftMAVLinkPacket(packet.SystemID,
+		// 		packet.ComponentID,
+		// 		dataStream,
+		// 	))
+		// })
 
 		iris.On(iris.Event(mavlink.MessageEvent), func(data interface{}) {
-			fmt.Println("message")
+			fmt.Printf("message %#v\n", data)
 			if data.(common.MAVLinkMessage).Id() == 30 {
 				message := data.(*common.Attitude)
 				fmt.Println("Attitude")
