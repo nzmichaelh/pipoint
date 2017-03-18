@@ -1,7 +1,9 @@
 package pipoint
 
 import (
+	"fmt"
 	common "gobot.io/x/gobot/platforms/mavlink/common"
+	"math"
 )
 
 const (
@@ -70,6 +72,10 @@ func NewPiPoint() *PiPoint {
 	return p
 }
 
+func (p *PiPoint) check(code int, cond bool) bool {
+	return !cond
+}
+
 func (p *PiPoint) update(param *Param) {
 	switch p.state.GetInt() {
 	case LocateState:
@@ -102,8 +108,49 @@ func (p *PiPoint) locate(param *Param) {
 	}
 }
 
+func (p *PiPoint) point(rover, base *Position) (*Attitude, error) {
+	lat := AsRad(base.Lat)
+
+	dlat := rover.Lat - base.Lat
+	dlon := rover.Lon - base.Lon
+	dalt := rover.Alt - base.Alt
+
+	if math.Abs(dlat) > 1 || math.Abs(dlon) > 1 {
+		return nil, fmt.Errorf("Rover is too far away")
+	}
+
+	if math.Abs(lat) > AsRad(80) {
+		return nil, fmt.Errorf("System is too far north or south")
+	}
+
+	dlat *= LatLength(lat)
+	dlon *= LonLength(lat)
+
+	hdist := math.Sqrt(dlat*dlat + dlon*dlon)
+
+	return &Attitude{
+		Roll: 0,
+		Pitch: math.Atan2(dalt, hdist),
+		Yaw:   math.Atan2(dlon, dlat),
+	}, nil
+}
+
 // Updates during the Run state.
 func (p *PiPoint) run(param *Param) {
+	switch param {
+	case p.gps:
+		p.rover.Set(p.gps.Get())
+	}
+
+	if p.check(1, p.rover.Ok() || !p.base.Ok()) {
+		// Location is invalid or old.
+		return
+	}
+
+	rover := p.rover.Get().(*Position)
+	base := p.base.Get().(*Position)
+
+	p.point(rover, base)
 }
 
 // Dispatch a MAVLink message.
