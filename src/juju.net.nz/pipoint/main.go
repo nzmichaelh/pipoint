@@ -1,73 +1,166 @@
 package main
 
 import (
-	"fmt"
-	"time"
-	
+	"log"
+
 	"gobot.io/x/gobot"
+	"gobot.io/x/gobot/api"
+	_ "gobot.io/x/gobot/drivers/gpio"
 	"gobot.io/x/gobot/platforms/mavlink"
 	common "gobot.io/x/gobot/platforms/mavlink/common"
 )
 
-func main() {
-	adaptor := mavlink.NewUDPAdaptor(":14550")
-	iris := mavlink.NewDriver(adaptor)
+const (
+	LocateState = iota
+	RunState    = iota
+)
 
-	work := func() {
-		gobot.After(1*time.Second, func() {
-			fmt.Println("after");
+type Position struct {
+	Lat float64
+	Lon float64
+	Alt float64
+}
 
-			dataStream := common.NewRequestDataStream(100,
-				0,
-				0,
-				4,
-				1,
-			)
-			iris.SendPacket(common.CraftMAVLinkPacket(0,
-				0,
-				dataStream,
-			))
-		})
-		
-		// iris.Once(iris.Event(mavlink.PacketEvent), func(data interface{}) {
-		// 	fmt.Println("packet")
-		// 	packet := data.(*common.MAVLinkPacket)
+type Attitude struct {
+	Roll  float64
+	Pitch float64
+	Yaw   float64
+}
 
-		// 	dataStream := common.NewRequestDataStream(100,
-		// 		packet.SystemID,
-		// 		packet.ComponentID,
-		// 		4,
-		// 		1,
-		// 	)
-		// 	iris.SendPacket(common.CraftMAVLinkPacket(packet.SystemID,
-		// 		packet.ComponentID,
-		// 		dataStream,
-		// 	))
-		// })
+type PiPoint struct {
+	params *Params
+	driver *mavlink.Driver
 
-		iris.On(iris.Event(mavlink.MessageEvent), func(data interface{}) {
-			fmt.Printf("message %#v\n", data)
-			if data.(common.MAVLinkMessage).Id() == 30 {
-				message := data.(*common.Attitude)
-				fmt.Println("Attitude")
-				fmt.Println("TIME_BOOT_MS", message.TIME_BOOT_MS)
-				fmt.Println("ROLL", message.ROLL)
-				fmt.Println("PITCH", message.PITCH)
-				fmt.Println("YAW", message.YAW)
-				fmt.Println("ROLLSPEED", message.ROLLSPEED)
-				fmt.Println("PITCHSPEED", message.PITCHSPEED)
-				fmt.Println("YAWSPEED", message.YAWSPEED)
-				fmt.Println("")
-			}
-		})
+	state *Param
+
+	fix *Param
+
+	heartbeat *Param
+	attitude  *Param
+	gps       *Param
+	rover     *Param
+	base      *Param
+
+	sp     *Param
+	offset *Param
+
+	pan  *Param
+	tilt *Param
+}
+
+func NewPiPoint(driver *mavlink.Driver) *PiPoint {
+	p := &PiPoint{
+		params: &Params{},
+		driver: driver,
 	}
 
-	robot := gobot.NewRobot("mavBot",
+	p.state = p.params.NewWith("state", 0)
+	p.fix = p.params.New("fix")
+	p.heartbeat = p.params.New("heartbeat")
+
+	p.gps = p.params.New("gps.position")
+
+	p.attitude = p.params.New("rover.attitude")
+	p.rover = p.params.New("rover.position")
+	p.base = p.params.New("base.position")
+
+	p.sp = p.params.NewWith("pantilt.sp", &Attitude{})
+	p.offset = p.params.NewWith("pantilt.offset", &Attitude{})
+
+	p.pan = p.params.New("pantilt.pan")
+	p.tilt = p.params.New("pantilt.tilt")
+
+	p.params.Listen(p.Update)
+	return p
+}
+
+func (p *PiPoint) Update(param *Param) {
+	switch p.state.GetInt() {
+	case LocateState:
+		p.Locate(param)
+	case RunState:
+		p.Run(param)
+	}
+
+	if param == p.sp || param == p.offset {
+		sp := p.sp.Get().(*Attitude)
+		offset := p.offset.Get().(*Attitude)
+
+		p.pan.SetFloat64(sp.Yaw + offset.Yaw)
+		p.tilt.SetFloat64(sp.Pitch + offset.Pitch)
+	}
+}
+
+func (p *PiPoint) Locate(param *Param) {
+	switch param {
+	case p.gps:
+		p.rover.Set(p.gps.Get())
+	case p.attitude:
+		p.offset.Set(&Attitude{
+			Yaw: p.attitude.Get().(*Attitude).Yaw,
+		})
+	case p.fix:
+		// Move to Run
+		p.state.SetInt(RunState)
+	}
+}
+
+func (p *PiPoint) Run(param *Param) {
+}
+
+func (p *PiPoint) Message(msg interface{}) {
+	switch msg.(type) {
+	case *common.Heartbeat:
+		p.heartbeat.Inc()
+	case *common.GpsRawInt:
+		gps := msg.(*common.GpsRawInt)
+		p.gps.Set(&Position{
+			float64(gps.LAT),
+			float64(gps.LON),
+			float64(gps.ALT),
+		})
+	case *common.Attitude:
+		att := msg.(*common.Attitude)
+		p.attitude.Set(&Attitude{
+			float64(att.ROLL),
+			float64(att.PITCH),
+			float64(att.YAW),
+		})
+
+	default:
+	}
+}
+
+func (p *PiPoint) Fix() string {
+	p.fix.Inc()
+	return "OK"
+}
+
+func (p *PiPoint) Work() {
+	p.driver.On(p.driver.Event(mavlink.MessageEvent), p.Message)
+}
+
+func main() {
+	adaptor := mavlink.NewUDPAdaptor(":14550")
+	driver := mavlink.NewDriver(adaptor)
+
+	p := NewPiPoint(driver)
+
+	master := gobot.NewMaster()
+	a := api.NewAPI(master)
+	a.Start()
+
+	robot := gobot.NewRobot("pipoint",
 		[]gobot.Connection{adaptor},
-		[]gobot.Device{iris},
-		work,
+		[]gobot.Device{driver},
+		func() { p.Work() },
 	)
 
-	fmt.Println("start")
-	robot.Start()
+	robot.AddCommand("fix", func(params map[string]interface{}) interface{} {
+		return p.Fix()
+	})
+
+	master.AddRobot(robot)
+	log.Println("Start")
+	master.Start()
 }
