@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	"juju.net.nz/pipoint"
+
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/api"
 	_ "gobot.io/x/gobot/drivers/gpio"
@@ -28,29 +30,29 @@ type Attitude struct {
 }
 
 type PiPoint struct {
-	params *Params
+	params *pipoint.Params
 	driver *mavlink.Driver
 
-	state *Param
+	state *pipoint.Param
 
-	fix *Param
+	fix *pipoint.Param
 
-	heartbeat *Param
-	attitude  *Param
-	gps       *Param
-	rover     *Param
-	base      *Param
+	heartbeat *pipoint.Param
+	attitude  *pipoint.Param
+	gps       *pipoint.Param
+	rover     *pipoint.Param
+	base      *pipoint.Param
 
-	sp     *Param
-	offset *Param
+	sp     *pipoint.Param
+	offset *pipoint.Param
 
-	pan  *Param
-	tilt *Param
+	pan  *pipoint.Param
+	tilt *pipoint.Param
 }
 
 func NewPiPoint(driver *mavlink.Driver) *PiPoint {
 	p := &PiPoint{
-		params: &Params{},
+		params: &pipoint.Params{},
 		driver: driver,
 	}
 
@@ -74,7 +76,7 @@ func NewPiPoint(driver *mavlink.Driver) *PiPoint {
 	return p
 }
 
-func (p *PiPoint) Update(param *Param) {
+func (p *PiPoint) Update(param *pipoint.Param) {
 	switch p.state.GetInt() {
 	case LocateState:
 		p.Locate(param)
@@ -91,7 +93,7 @@ func (p *PiPoint) Update(param *Param) {
 	}
 }
 
-func (p *PiPoint) Locate(param *Param) {
+func (p *PiPoint) Locate(param *pipoint.Param) {
 	switch param {
 	case p.gps:
 		p.rover.Set(p.gps.Get())
@@ -105,7 +107,7 @@ func (p *PiPoint) Locate(param *Param) {
 	}
 }
 
-func (p *PiPoint) Run(param *Param) {
+func (p *PiPoint) Run(param *pipoint.Param) {
 }
 
 func (p *PiPoint) Message(msg interface{}) {

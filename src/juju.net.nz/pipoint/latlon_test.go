@@ -1,8 +1,9 @@
-package main
+package pipoint
 
 import (
 	"math"
 	"testing"
+	"fmt"
 )
 
 func checkClose(t *testing.T, a float64, b float64, limit float64) {
@@ -21,6 +22,11 @@ func TestLatLength(t *testing.T) {
 	checkClose(t, LatLength(math.Pi*45/180), 111132, 1)
 	checkClose(t, LatLength(math.Pi*60/180), 111412, 1)
 	checkClose(t, LatLength(math.Pi*75/180), 111618, 1)
+}
+
+func ExampleLatLength() {
+	fmt.Println(int(LatLength(46.8 * math.Pi/180)))
+	// Output: 111166
 }
 
 func TestLonLength(t *testing.T) {
