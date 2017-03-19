@@ -1,6 +1,8 @@
 package pipoint
 
 import (
+	"fmt"
+	"reflect"
 	"time"
 )
 
@@ -43,6 +45,11 @@ func (p *Param) GetInt() int {
 
 // Set the value, update validity, and notify listeners.
 func (p *Param) Set(value interface{}) {
+	if p.value != nil && reflect.TypeOf(value) !=
+		reflect.TypeOf(p.value) {
+		panic(fmt.Sprintf("Type of %v changed from %v to %v",
+			p.name, p.value, value))
+	}
 	p.value = value
 	p.updated = time.Now()
 	p.final = false
