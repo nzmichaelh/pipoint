@@ -1,7 +1,6 @@
 package pipoint
 
 import (
-	"log"
 	"time"
 )
 
@@ -44,7 +43,6 @@ func (p *Param) GetInt() int {
 
 // Set the value, update validity, and notify listeners.
 func (p *Param) Set(value interface{}) {
-	log.Printf("set %v = %v\n", p.name, value)
 	p.value = value
 	p.updated = time.Now()
 	p.final = false

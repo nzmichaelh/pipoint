@@ -27,5 +27,9 @@ func LonLength(lat float64) float64 {
 }
 
 func AsRad(deg float64) float64 {
-	return deg * math.Pi / 180
+	return deg * (math.Pi / 180)
+}
+
+func AsDeg(rad float64) float64 {
+	return rad * (180 / math.Pi)
 }
