@@ -3,6 +3,7 @@ package pipoint
 import (
 	"testing"
 	"math"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPointEast(t *testing.T) {
@@ -14,8 +15,8 @@ func TestPointEast(t *testing.T) {
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
-	checkClose(t, at.Pitch, 0, 0.001)
-	checkClose(t, at.Yaw, math.Pi/2, 0.001)
+	assert.InDelta(t, at.Pitch, 0, 0.001)
+	assert.InDelta(t, at.Yaw, math.Pi/2, 0.001)
 }
 
 func TestPointWest(t *testing.T) {
@@ -27,8 +28,8 @@ func TestPointWest(t *testing.T) {
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
-	checkClose(t, at.Pitch, 0, 0.001)
-	checkClose(t, at.Yaw, -math.Pi/2, 0.001)
+	assert.InDelta(t, at.Pitch, 0, 0.001)
+	assert.InDelta(t, at.Yaw, -math.Pi/2, 0.001)
 }
 
 func TestPointNorth(t *testing.T) {
@@ -40,8 +41,8 @@ func TestPointNorth(t *testing.T) {
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
-	checkClose(t, at.Pitch, 0, 0.001)
-	checkClose(t, at.Yaw, 0, 0.001)
+	assert.InDelta(t, at.Pitch, 0, 0.001)
+	assert.InDelta(t, at.Yaw, 0, 0.001)
 }
 
 func TestPointSouth(t *testing.T) {
@@ -53,8 +54,8 @@ func TestPointSouth(t *testing.T) {
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
-	checkClose(t, at.Pitch, 0, 0.001)
-	checkClose(t, at.Yaw, math.Pi, 0.001)
+	assert.InDelta(t, at.Pitch, 0, 0.001)
+	assert.InDelta(t, at.Yaw, math.Pi, 0.001)
 }
 
 func TestPointUp(t *testing.T) {
@@ -66,8 +67,8 @@ func TestPointUp(t *testing.T) {
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
-	checkClose(t, at.Pitch, AsRad(53), 0.01)
-	checkClose(t, at.Yaw, math.Pi/2, 0.001)
+	assert.InDelta(t, at.Pitch, AsRad(53), 0.01)
+	assert.InDelta(t, at.Yaw, math.Pi/2, 0.001)
 }
 
 func TestPointDown(t *testing.T) {
@@ -79,6 +80,6 @@ func TestPointDown(t *testing.T) {
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
-	checkClose(t, at.Pitch, AsRad(-53), 0.01)
-	checkClose(t, at.Yaw, math.Pi/2, 0.001)
+	assert.InDelta(t, at.Pitch, AsRad(-53), 0.01)
+	assert.InDelta(t, at.Yaw, math.Pi/2, 0.001)
 }
