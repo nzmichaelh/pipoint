@@ -27,7 +27,7 @@ type Attitude struct {
 
 // An automatic, GPS based system that points a camera at the rover.
 type PiPoint struct {
-	params *Params
+	Params *Params
 
 	state *Param
 
@@ -49,26 +49,26 @@ type PiPoint struct {
 // Create a new camera pointer.
 func NewPiPoint() *PiPoint {
 	p := &PiPoint{
-		params: &Params{},
+		Params: &Params{},
 	}
 
-	p.state = p.params.NewWith("state", 0)
-	p.fix = p.params.New("fix")
-	p.heartbeat = p.params.New("heartbeat")
+	p.state = p.Params.NewWith("state", 0)
+	p.fix = p.Params.New("fix")
+	p.heartbeat = p.Params.New("heartbeat")
 
-	p.gps = p.params.New("gps.position")
+	p.gps = p.Params.New("gps.position")
 
-	p.attitude = p.params.New("rover.attitude")
-	p.rover = p.params.New("rover.position")
-	p.base = p.params.New("base.position")
+	p.attitude = p.Params.New("rover.attitude")
+	p.rover = p.Params.New("rover.position")
+	p.base = p.Params.New("base.position")
 
-	p.sp = p.params.NewWith("pantilt.sp", &Attitude{})
-	p.offset = p.params.NewWith("pantilt.offset", &Attitude{})
+	p.sp = p.Params.NewWith("pantilt.sp", &Attitude{})
+	p.offset = p.Params.NewWith("pantilt.offset", &Attitude{})
 
-	p.pan = p.params.New("pantilt.pan")
-	p.tilt = p.params.New("pantilt.tilt")
+	p.pan = p.Params.New("pantilt.pan")
+	p.tilt = p.Params.New("pantilt.tilt")
 
-	p.params.Listen(p.update)
+	p.Params.Listen(p.update)
 	return p
 }
 
@@ -129,7 +129,7 @@ func (p *PiPoint) point(rover, base *Position) (*Attitude, error) {
 	hdist := math.Sqrt(dlat*dlat + dlon*dlon)
 
 	return &Attitude{
-		Roll: 0,
+		Roll:  0,
 		Pitch: math.Atan2(dalt, hdist),
 		Yaw:   math.Atan2(dlon, dlat),
 	}, nil
