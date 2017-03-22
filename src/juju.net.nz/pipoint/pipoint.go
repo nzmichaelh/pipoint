@@ -13,9 +13,10 @@ const (
 
 // Geographic coordinates.
 type Position struct {
-	Lat float64
-	Lon float64
-	Alt float64
+	Lat     float64
+	Lon     float64
+	Alt     float64
+	Heading float64
 }
 
 // Orientation of a body.
@@ -33,11 +34,13 @@ type PiPoint struct {
 
 	fix *Param
 
-	heartbeat *Param
-	attitude  *Param
-	gps       *Param
-	rover     *Param
-	base      *Param
+	heartbeats *Param
+	heartbeat  *Param
+	attitude   *Param
+	gps        *Param
+	rover      *Param
+	base       *Param
+	sysStatus  *Param
 
 	sp     *Param
 	offset *Param
@@ -55,12 +58,15 @@ func NewPiPoint() *PiPoint {
 	p.state = p.Params.NewWith("state", 0)
 	p.fix = p.Params.New("fix")
 	p.heartbeat = p.Params.New("heartbeat")
+	p.heartbeats = p.Params.New("heartbeat")
 
 	p.gps = p.Params.New("gps.position")
 
 	p.attitude = p.Params.New("rover.attitude")
 	p.rover = p.Params.New("rover.position")
 	p.base = p.Params.New("base.position")
+
+	p.sysStatus = p.Params.New("rover.status")
 
 	p.sp = p.Params.NewWith("pantilt.sp", &Attitude{})
 	p.offset = p.Params.NewWith("pantilt.offset", &Attitude{})
@@ -157,13 +163,17 @@ func (p *PiPoint) run(param *Param) {
 func (p *PiPoint) Message(msg interface{}) {
 	switch msg.(type) {
 	case *common.Heartbeat:
-		p.heartbeat.Inc()
-	case *common.GpsRawInt:
-		gps := msg.(*common.GpsRawInt)
+		p.heartbeats.Inc()
+		p.heartbeat.Set(msg.(*common.Heartbeat))
+	case *common.SysStatus:
+		p.sysStatus.Set(msg.(*common.SysStatus))
+	case *common.GlobalPositionInt:
+		gps := msg.(*common.GlobalPositionInt)
 		p.gps.Set(&Position{
-			float64(gps.LAT),
-			float64(gps.LON),
-			float64(gps.ALT),
+			float64(gps.LAT) * 1e-7,
+			float64(gps.LON) * 1e-7,
+			float64(gps.ALT) * 1e-3,
+			float64(gps.HDG) * 1e-2,
 		})
 	case *common.Attitude:
 		att := msg.(*common.Attitude)
@@ -172,7 +182,6 @@ func (p *PiPoint) Message(msg interface{}) {
 			float64(att.PITCH),
 			float64(att.YAW),
 		})
-
 	default:
 	}
 }
