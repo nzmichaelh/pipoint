@@ -3,6 +3,7 @@
 #   action: apt update_cache=yes
 # - name: Upgrade APT to the lastest packages
 #   action: apt upgrade=safe
+- include: mavlink.yml
 - include: accesspoint.yml
 - name: Set the hostname
   hostname: name="pi-{{hostid}}"

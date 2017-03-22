@@ -1,0 +1,13 @@
+[Unit]
+Description=mavproxy
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/mavproxy.py --daemon --default-modules=mavlink --out=udpbcast:192.168.0.255:14550
+WorkingDirectory=/var/log/mavproxy
+Restart=always
+RestartSec=2s
+User=juju
+
+[Install]
+WantedBy=multi-user.target
