@@ -8,8 +8,8 @@ import (
 
 func TestPointEast(t *testing.T) {
 	// ~7 km to the east.
-	rover := &Position{46.8, 8.3, 0}
-	base := &Position{46.8, 8.2, 0}
+	rover := &Position{46.8, 8.3, 0, 0}
+	base := &Position{46.8, 8.2, 0, 0}
 
 	at, err := NewPiPoint().point(rover, base)
 	if err != nil {
@@ -21,8 +21,8 @@ func TestPointEast(t *testing.T) {
 
 func TestPointWest(t *testing.T) {
 	// ~7 km to the west.
-	rover := &Position{46.8, 8.1, 0}
-	base := &Position{46.8, 8.2, 0}
+	rover := &Position{46.8, 8.1, 0, 0}
+	base := &Position{46.8, 8.2, 0, 0}
 
 	at, err := NewPiPoint().point(rover, base)
 	if err != nil {
@@ -34,8 +34,8 @@ func TestPointWest(t *testing.T) {
 
 func TestPointNorth(t *testing.T) {
 	// ~10 km to the north.
-	rover := &Position{46.9, 8.2, 0}
-	base := &Position{46.8, 8.2, 0}
+	rover := &Position{46.9, 8.2, 0, 0}
+	base := &Position{46.8, 8.2, 0, 0}
 
 	at, err := NewPiPoint().point(rover, base)
 	if err != nil {
@@ -47,8 +47,8 @@ func TestPointNorth(t *testing.T) {
 
 func TestPointSouth(t *testing.T) {
 	// ~10 km to the south.
-	rover := &Position{46.7, 8.2, 0}
-	base := &Position{46.8, 8.2, 0}
+	rover := &Position{46.7, 8.2, 0, 0}
+	base := &Position{46.8, 8.2, 0, 0}
 
 	at, err := NewPiPoint().point(rover, base)
 	if err != nil {
@@ -60,8 +60,8 @@ func TestPointSouth(t *testing.T) {
 
 func TestPointUp(t *testing.T) {
 	// ~50 degrees up.
-	rover := &Position{46.8, 8.21, 1000}
-	base := &Position{46.8, 8.2, 0}
+	rover := &Position{46.8, 8.21, 1000, 0}
+	base := &Position{46.8, 8.2, 0, 0}
 
 	at, err := NewPiPoint().point(rover, base)
 	if err != nil {
@@ -73,8 +73,8 @@ func TestPointUp(t *testing.T) {
 
 func TestPointDown(t *testing.T) {
 	// ~50 degrees down.
-	rover := &Position{46.8, 8.21, 0}
-	base := &Position{46.8, 8.2, 1000}
+	rover := &Position{46.8, 8.21, 0, 0}
+	base := &Position{46.8, 8.2, 1000, 0}
 
 	at, err := NewPiPoint().point(rover, base)
 	if err != nil {
