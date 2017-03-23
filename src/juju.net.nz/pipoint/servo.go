@@ -22,7 +22,7 @@ type Servo struct {
 func NewServo(name string, params *Params) *Servo {
 	s := &Servo{
 		params: params.NewWith(name, &ServoParams{
-			name,
+			"",
 			-math.Pi / 2,
 			math.Pi / 2,
 			0,
