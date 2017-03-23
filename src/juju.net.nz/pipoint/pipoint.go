@@ -45,19 +45,19 @@ type PiPoint struct {
 	sp     *Param
 	offset *Param
 
-	pan  *Param
-	tilt *Param
+	pan  *Servo
+	tilt *Servo
 }
 
 // Create a new camera pointer.
 func NewPiPoint() *PiPoint {
 	p := &PiPoint{
-		Params: &Params{},
+		Params: NewParams("pipoint"),
 	}
 
 	p.state = p.Params.NewWith("state", 0)
 	p.fix = p.Params.New("fix")
-	p.heartbeat = p.Params.New("heartbeat")
+	p.heartbeat = p.Params.NewWith("heartbeat", &common.Heartbeat{})
 	p.heartbeats = p.Params.New("heartbeat")
 
 	p.gps = p.Params.New("gps.position")
@@ -71,10 +71,11 @@ func NewPiPoint() *PiPoint {
 	p.sp = p.Params.NewWith("pantilt.sp", &Attitude{})
 	p.offset = p.Params.NewWith("pantilt.offset", &Attitude{})
 
-	p.pan = p.Params.New("pantilt.pan")
-	p.tilt = p.Params.New("pantilt.tilt")
+	p.pan = NewServo("pantilt.pan", p.Params)
+	p.tilt = NewServo("pantilt.tilt", p.Params)
 
 	p.Params.Listen(p.update)
+	p.Params.Load()
 	return p
 }
 
@@ -94,8 +95,8 @@ func (p *PiPoint) update(param *Param) {
 		sp := p.sp.Get().(*Attitude)
 		offset := p.offset.Get().(*Attitude)
 
-		p.pan.SetFloat64(sp.Yaw + offset.Yaw)
-		p.tilt.SetFloat64(sp.Pitch + offset.Pitch)
+		p.pan.Set(sp.Yaw + offset.Yaw)
+		p.tilt.Set(sp.Pitch + offset.Pitch)
 	}
 }
 

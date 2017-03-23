@@ -7,17 +7,35 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
+	"github.com/spf13/viper"
 )
 
 type ParamListener func(p *Param)
 
 // Params is a group of parameters that can be listened to.
 type Params struct {
-	Name      string
+	name      string
+	viper     *viper.Viper
 	params    []*Param
 	listeners []ParamListener
+}
+
+func NewParams(name string) *Params {
+	ps := &Params{
+		name:  name,
+		viper: viper.New(),
+	}
+
+	ps.viper.SetConfigName(name)
+	ps.viper.AddConfigPath(".")
+	ps.viper.ReadInConfig()
+	ps.viper.WatchConfig()
+	ps.viper.OnConfigChange(func(e fsnotify.Event) { ps.Load() })
+
+	return ps
 }
 
 // Create a new Param in this group.  The Param is uninitialised and
@@ -59,24 +77,32 @@ func (ps *Params) Walk(visitor func(*Param)) {
 	}
 }
 
-func makeName(path []string) string {
-	name := strings.Join(path, ".")
-	return strings.Replace(strings.ToLower(name), ".", "_", -1)
+type LeafVisitor func(p *Param, path []string, value reflect.Value)
+
+func (ps *Params) WalkLeaves(visitor LeafVisitor) {
+	for _, p := range ps.params {
+		ps.visitOne(p, visitor, []string{ps.name, p.name}, reflect.ValueOf(p.Get()))
+	}
 }
 
-func (ps *Params) visitOne(w *bytes.Buffer, path []string, v reflect.Value) {
+func makeName(path []string, sep string) string {
+	name := strings.Join(path, ".")
+	return strings.Replace(strings.ToLower(name), ".", sep, -1)
+}
+
+func (ps *Params) visitOne(p *Param, visitor LeafVisitor, path []string, v reflect.Value) {
 	switch v.Kind() {
 	case reflect.Ptr, reflect.Interface:
-		ps.visitOne(w, path, v.Elem())
+		ps.visitOne(p, visitor, path, v.Elem())
 	case reflect.Struct:
 		t := v.Type()
 		for i := 0; i < v.NumField(); i++ {
-			ps.visitOne(w, append(path, t.Field(i).Name), v.Field(i))
+			ps.visitOne(p, visitor, append(path, t.Field(i).Name), v.Field(i))
 		}
-	case reflect.String:
-		w.WriteString(fmt.Sprintf("%s{value=\"%s\"} 1\n", makeName(path), v))
+	case reflect.Invalid:
+		break
 	default:
-		w.WriteString(fmt.Sprintf("%s %v\n", makeName(path), v))
+		visitor(p, path, v)
 	}
 }
 
@@ -92,14 +118,34 @@ func (ps *Params) Metrics(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	header := w.Header()
-	header.Set("Content-Type", string(expfmt.FmtText))
-
-	ps.Walk(func(p *Param) {
-		if p.Get() != nil {
-			ps.visitOne(&buf, []string{"pipoint", p.name}, reflect.ValueOf(p.Get()))
+	ps.WalkLeaves(func(p *Param, path []string, v reflect.Value) {
+		name := makeName(path, "_")
+		switch v.Kind() {
+		case reflect.String:
+			if v.String() != "" {
+				buf.WriteString(fmt.Sprintf("%s{value=\"%s\"} 1\n", name, v))
+			}
+		default:
+			buf.WriteString(fmt.Sprintf("%s %v\n", name, v))
 		}
 	})
 
+	header := w.Header()
+	header.Set("Content-Type", string(expfmt.FmtText))
 	w.Write(buf.Bytes())
+}
+
+func (ps *Params) Load() {
+	ps.WalkLeaves(func(p *Param, path []string, v reflect.Value) {
+		name := makeName(path, ".")
+		if !ps.viper.IsSet(name) {
+			return
+		}
+		next := ps.viper.Get(name)
+		if v.CanSet() {
+			v.Set(reflect.ValueOf(next))
+		} else {
+			p.Set(next)
+		}
+	})
 }
