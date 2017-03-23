@@ -99,8 +99,6 @@ func (ps *Params) visitOne(p *Param, visitor LeafVisitor, path []string, v refle
 		for i := 0; i < v.NumField(); i++ {
 			ps.visitOne(p, visitor, append(path, t.Field(i).Name), v.Field(i))
 		}
-	case reflect.Invalid:
-		break
 	default:
 		visitor(p, path, v)
 	}
@@ -121,6 +119,8 @@ func (ps *Params) Metrics(w http.ResponseWriter, req *http.Request) {
 	ps.WalkLeaves(func(p *Param, path []string, v reflect.Value) {
 		name := makeName(path, "_")
 		switch v.Kind() {
+		case reflect.Invalid:
+			break
 		case reflect.String:
 			if v.String() != "" {
 				buf.WriteString(fmt.Sprintf("%s{value=\"%s\"} 1\n", name, v))
