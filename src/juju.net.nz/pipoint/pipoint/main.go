@@ -1,9 +1,11 @@
 package main
 
 import (
-	"juju.net.nz/pipoint"
 	"log"
 	"net/http"
+	"time"
+
+	"juju.net.nz/pipoint"
 
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/api"
@@ -11,7 +13,7 @@ import (
 )
 
 func main() {
-	adaptor := mavlink.NewUDPAdaptor(":14550")
+	adaptor := mavlink.NewUDPAdaptor(":14551")
 	driver := mavlink.NewDriver(adaptor)
 
 	p := pipoint.NewPiPoint()
@@ -26,6 +28,7 @@ func main() {
 		[]gobot.Device{driver},
 		func() {
 			driver.On(driver.Event(mavlink.MessageEvent), p.Message)
+			gobot.Every(50*time.Millisecond, p.Tick)
 		})
 
 	robot.AddCommand("fix", func(params map[string]interface{}) interface{} {
