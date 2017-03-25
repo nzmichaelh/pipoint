@@ -10,6 +10,7 @@ const (
 	LocateState = iota
 	RunState    = iota
 	ManualState = iota
+	CycleState  = iota
 )
 
 // Geographic coordinates.
@@ -48,6 +49,8 @@ type PiPoint struct {
 
 	pan  *Servo
 	tilt *Servo
+
+	cycle float64
 }
 
 // Create a new camera pointer.
@@ -81,8 +84,13 @@ func NewPiPoint() *PiPoint {
 }
 
 func (p *PiPoint) Tick() {
-	p.pan.Set(p.pan.sp.GetFloat64())
-	p.tilt.Set(p.tilt.sp.GetFloat64())
+	switch p.state.GetInt() {
+	case CycleState:
+		p.cycle += 0.02
+		p.pan.Set(Scale(math.Cos(p.cycle), -1, 1, -math.Pi/2, math.Pi/2))
+		p.tilt.Set(Scale(math.Sin(p.cycle), -1, 1, -math.Pi/2, 0))
+	default:
+	}
 }
 
 func (p *PiPoint) check(code int, cond bool) bool {
@@ -97,7 +105,8 @@ func (p *PiPoint) update(param *Param) {
 		p.run(param)
 	}
 
-	if p.state.GetInt() != ManualState {
+	switch p.state.GetInt() {
+	case LocateState, RunState:
 		if param == p.sp || param == p.offset {
 			sp := p.sp.Get().(*Attitude)
 			offset := p.offset.Get().(*Attitude)
@@ -105,6 +114,7 @@ func (p *PiPoint) update(param *Param) {
 			p.pan.Set(sp.Yaw + offset.Yaw)
 			p.tilt.Set(sp.Pitch + offset.Pitch)
 		}
+	default:
 	}
 }
 
