@@ -28,7 +28,7 @@ func main() {
 		[]gobot.Device{driver},
 		func() {
 			driver.On(driver.Event(mavlink.MessageEvent), p.Message)
-			gobot.Every(50*time.Millisecond, p.Tick)
+			gobot.Every(20*time.Millisecond, p.Tick)
 		})
 
 	robot.AddCommand("fix", func(params map[string]interface{}) interface{} {
