@@ -1,17 +1,19 @@
 package pipoint
 
 import (
-	"math"
 	"log"
+	"math"
 )
 
 // Parameters for a servo including limits.
 type ServoParams struct {
-	Pin int
+	Pin  int
 	Span float64
 
-	Min float64
-	Max float64
+	Min  float64
+	Max  float64
+	Low  float64
+	High float64
 }
 
 // A servo on a pin with limits, demand, and actual position.
@@ -19,15 +21,17 @@ type Servo struct {
 	params *Param
 	sp     *Param
 	pv     *Param
-	pwm *PwmPin
+	pwm    *PwmPin
 }
 
 func NewServo(name string, params *Params) *Servo {
 	s := &Servo{
 		params: params.NewWith(name, &ServoParams{
-			Pin: -1,
-			Min: 1.1,
-			Max: 1.9,
+			Pin:  -1,
+			Min:  1.0,
+			Max:  2.0,
+			Low:  1.1,
+			High: 1.9,
 			Span: math.Pi,
 		}),
 		sp: params.New(name + ".sp"),
@@ -43,16 +47,10 @@ func (s *Servo) Set(angle float64) {
 	s.sp.SetFloat64(angle)
 
 	// Convert to pulse width.
-	angle += math.Pi/2
-	angle /= math.Pi
+	angle += math.Pi / 2
 
-	ms := params.Min + angle*(params.Max - params.Min)
-	if ms < 1 {
-		ms = 1
-	}
-	if ms > 2 {
-		ms = 2
-	}
+	ms := Scale(angle, 0, params.Span, params.Low, params.High)
+	ms = math.Min(params.Max, math.Max(params.Min, ms))
 	s.pv.SetFloat64(ms)
 
 	if params.Pin < 0 {
@@ -64,7 +62,7 @@ func (s *Servo) Set(angle float64) {
 			s.pwm.UnExport()
 		}
 		s.pwm = &PwmPin{Chip: 0, Pin: params.Pin}
-		
+
 		var err error
 		s.pwm.Export()
 		err = s.pwm.SetEnable(0)
@@ -72,7 +70,7 @@ func (s *Servo) Set(angle float64) {
 			err = s.pwm.SetPeriod(20e6)
 		}
 		if err == nil {
-			s.pwm.SetDuty(int(ms*1e6))
+			s.pwm.SetDuty(int(ms * 1e6))
 		}
 		if err == nil {
 			err = s.pwm.SetEnable(1)
@@ -82,6 +80,6 @@ func (s *Servo) Set(angle float64) {
 		}
 	}
 	if s.pwm != nil {
-		s.pwm.SetDuty(int(ms*1e6))
+		s.pwm.SetDuty(int(ms * 1e6))
 	}
 }
