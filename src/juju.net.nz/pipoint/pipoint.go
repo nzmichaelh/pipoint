@@ -9,6 +9,7 @@ import (
 const (
 	LocateState = iota
 	RunState    = iota
+	ManualState = iota
 )
 
 // Geographic coordinates.
@@ -79,6 +80,11 @@ func NewPiPoint() *PiPoint {
 	return p
 }
 
+func (p *PiPoint) Tick() {
+	p.pan.Set(p.pan.sp.GetFloat64())
+	p.tilt.Set(p.tilt.sp.GetFloat64())
+}
+
 func (p *PiPoint) check(code int, cond bool) bool {
 	return !cond
 }
@@ -91,12 +97,14 @@ func (p *PiPoint) update(param *Param) {
 		p.run(param)
 	}
 
-	if param == p.sp || param == p.offset {
-		sp := p.sp.Get().(*Attitude)
-		offset := p.offset.Get().(*Attitude)
+	if p.state.GetInt() != ManualState {
+		if param == p.sp || param == p.offset {
+			sp := p.sp.Get().(*Attitude)
+			offset := p.offset.Get().(*Attitude)
 
-		p.pan.Set(sp.Yaw + offset.Yaw)
-		p.tilt.Set(sp.Pitch + offset.Pitch)
+			p.pan.Set(sp.Yaw + offset.Yaw)
+			p.tilt.Set(sp.Pitch + offset.Pitch)
+		}
 	}
 }
 
