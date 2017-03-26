@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	adaptor := mavlink.NewUDPAdaptor(":14551")
+	adaptor := mavlink.NewUDPAdaptor(":14550")
 	driver := mavlink.NewDriver(adaptor)
 
 	p := pipoint.NewPiPoint()

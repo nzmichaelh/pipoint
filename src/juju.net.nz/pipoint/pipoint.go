@@ -4,6 +4,7 @@ import (
 	"fmt"
 	common "gobot.io/x/gobot/platforms/mavlink/common"
 	"math"
+	"log"
 )
 
 const (
@@ -51,6 +52,8 @@ type PiPoint struct {
 	tilt *Servo
 
 	cycle float64
+	// TODO: de-hack.
+	lock  bool
 }
 
 // Create a new camera pointer.
@@ -123,6 +126,8 @@ func (p *PiPoint) locate(param *Param) {
 	switch param {
 	case p.gps:
 		p.rover.Set(p.gps.Get())
+		p.base.Set(p.gps.Get())
+		p.base.Final()
 	case p.attitude:
 		p.offset.Set(&Attitude{
 			Yaw: p.attitude.Get().(*Attitude).Yaw,
@@ -152,11 +157,12 @@ func (p *PiPoint) point(rover, base *Position) (*Attitude, error) {
 	dlon *= LonLength(lat)
 
 	hdist := math.Sqrt(dlat*dlat + dlon*dlon)
+	pitch := math.Atan2(dalt, hdist)
+	yaw := math.Atan2(dlon, dlat)
 
 	return &Attitude{
-		Roll:  0,
-		Pitch: math.Atan2(dalt, hdist),
-		Yaw:   math.Atan2(dlon, dlat),
+		Pitch: pitch,
+		Yaw:   yaw,
 	}, nil
 }
 
@@ -167,15 +173,28 @@ func (p *PiPoint) run(param *Param) {
 		p.rover.Set(p.gps.Get())
 	}
 
-	if p.check(1, p.rover.Ok() || !p.base.Ok()) {
+	if !p.rover.Ok() || !p.base.Ok() {
 		// Location is invalid or old.
+		log.Println("run: skipping as invalid or old", p.rover.Ok(), p.base.Ok())
 		return
 	}
 
 	rover := p.rover.Get().(*Position)
 	base := p.base.Get().(*Position)
 
-	p.point(rover, base)
+	att, err := p.point(rover, base)
+	if err != nil {
+		log.Printf("point: %v\n", err)
+		return
+	}
+
+	if !p.lock {
+		p.lock = true
+		offset := p.offset.Get().(*Attitude)
+		p.pan.Set(WrapAngle(att.Yaw + offset.Yaw))
+		p.tilt.Set(WrapAngle(att.Pitch + offset.Pitch))
+		p.lock = false
+	}
 }
 
 // Dispatch a MAVLink message.
