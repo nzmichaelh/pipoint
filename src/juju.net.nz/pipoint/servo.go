@@ -14,6 +14,8 @@ type ServoParams struct {
 	Max  float64
 	Low  float64
 	High float64
+
+	Tau  float64
 }
 
 // A servo on a pin with limits, demand, and actual position.
@@ -22,6 +24,7 @@ type Servo struct {
 	sp     *Param
 	pv     *Param
 	pwm    *PwmPin
+	filter *Lowpass
 }
 
 func NewServo(name string, params *Params) *Servo {
@@ -33,18 +36,25 @@ func NewServo(name string, params *Params) *Servo {
 			Low:  1.1,
 			High: 1.9,
 			Span: math.Pi,
+			Tau: 1.0,
 		}),
 		sp: params.New(name + ".sp"),
 		pv: params.New(name + ".pv"),
+		filter: &Lowpass{},
 	}
 
 	return s
 }
 
 func (s *Servo) Set(angle float64) {
+	s.sp.SetFloat64(angle)
+}
+
+func (s *Servo) Tick() {
 	params := s.params.Get().(*ServoParams)
 
-	s.sp.SetFloat64(angle)
+	angle := s.sp.GetFloat64()
+	angle = s.filter.StepEx(angle, params.Tau)
 
 	// Convert to pulse width.
 	angle += math.Pi / 2

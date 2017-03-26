@@ -94,6 +94,9 @@ func (p *PiPoint) Tick() {
 		p.tilt.Set(Scale(math.Sin(p.cycle), -1, 1, -math.Pi/2, 0))
 	default:
 	}
+
+	p.pan.Tick()
+	p.tilt.Tick()
 }
 
 func (p *PiPoint) check(code int, cond bool) bool {
