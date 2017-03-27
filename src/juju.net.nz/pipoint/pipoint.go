@@ -1,21 +1,12 @@
 package pipoint
 
 import (
-	"fmt"
 	common "gobot.io/x/gobot/platforms/mavlink/common"
-	"math"
-	"log"
-)
-
-const (
-	LocateState = iota
-	RunState    = iota
-	ManualState = iota
-	CycleState  = iota
 )
 
 // Geographic coordinates.
 type Position struct {
+	Time    float64
 	Lat     float64
 	Lon     float64
 	Alt     float64
@@ -29,18 +20,22 @@ type Attitude struct {
 	Yaw   float64
 }
 
+type State interface {
+	Update(param *Param)
+}
+
 // An automatic, GPS based system that points a camera at the rover.
 type PiPoint struct {
 	Params *Params
 
 	state *Param
 
-	fix *Param
-
+	tick       *Param
 	heartbeats *Param
 	heartbeat  *Param
 	attitude   *Param
 	gps        *Param
+	pred       *Param
 	rover      *Param
 	base       *Param
 	sysStatus  *Param
@@ -51,7 +46,8 @@ type PiPoint struct {
 	pan  *Servo
 	tilt *Servo
 
-	cycle float64
+	cycle  float64
+	states []State
 }
 
 // Create a new camera pointer.
@@ -60,12 +56,20 @@ func NewPiPoint() *PiPoint {
 		Params: NewParams("pipoint"),
 	}
 
+	p.states = []State{
+		&LocateState{pi: p},
+		&RunState{pi: p},
+		&CycleState{pi: p},
+	}
+
+	p.tick = p.Params.New("tick")
+
 	p.state = p.Params.NewWith("state", 0)
-	p.fix = p.Params.New("fix")
 	p.heartbeat = p.Params.NewWith("heartbeat", &common.Heartbeat{})
 	p.heartbeats = p.Params.New("heartbeat")
 
 	p.gps = p.Params.New("gps.position")
+	p.pred = p.Params.New("pred.position")
 
 	p.attitude = p.Params.New("rover.attitude")
 	p.rover = p.Params.New("rover.position")
@@ -85,14 +89,7 @@ func NewPiPoint() *PiPoint {
 }
 
 func (p *PiPoint) Tick() {
-	switch p.state.GetInt() {
-	case CycleState:
-		p.cycle += 0.02
-		p.pan.Set(Scale(math.Cos(p.cycle), -1, 1, -math.Pi/2, math.Pi/2))
-		p.tilt.Set(Scale(math.Sin(p.cycle), -1, 1, -math.Pi/2, 0))
-	default:
-	}
-
+	p.tick.SetFloat64(Now())
 	p.pan.Tick()
 	p.tilt.Tick()
 }
@@ -102,97 +99,10 @@ func (p *PiPoint) check(code int, cond bool) bool {
 }
 
 func (p *PiPoint) update(param *Param) {
-	switch p.state.GetInt() {
-	case LocateState:
-		p.locate(param)
-	case RunState:
-		p.run(param)
-	}
+	state := p.state.GetInt()
 
-	switch p.state.GetInt() {
-	case LocateState, RunState:
-		if param == p.sp || param == p.offset {
-			sp := p.sp.Get().(*Attitude)
-			offset := p.offset.Get().(*Attitude)
-
-			p.pan.Set(sp.Yaw + offset.Yaw)
-			p.tilt.Set(sp.Pitch + offset.Pitch)
-		}
-	default:
-	}
-}
-
-// Updates during the Locate state.
-func (p *PiPoint) locate(param *Param) {
-	switch param {
-	case p.gps:
-		p.rover.Set(p.gps.Get())
-		p.base.Set(p.gps.Get())
-		p.base.Final()
-	case p.attitude:
-		p.offset.Set(&Attitude{
-			Yaw: p.attitude.Get().(*Attitude).Yaw,
-		})
-	case p.fix:
-		// Move to Run
-		p.state.SetInt(RunState)
-	}
-}
-
-func (p *PiPoint) point(rover, base *Position) (*Attitude, error) {
-	lat := AsRad(base.Lat)
-
-	dlat := rover.Lat - base.Lat
-	dlon := rover.Lon - base.Lon
-	dalt := rover.Alt - base.Alt
-
-	if math.Abs(dlat) > 1 || math.Abs(dlon) > 1 {
-		return nil, fmt.Errorf("Rover is too far away")
-	}
-
-	if math.Abs(lat) > AsRad(80) {
-		return nil, fmt.Errorf("System is too far north or south")
-	}
-
-	dlat *= LatLength(lat)
-	dlon *= LonLength(lat)
-
-	hdist := math.Sqrt(dlat*dlat + dlon*dlon)
-	pitch := math.Atan2(dalt, hdist)
-	yaw := math.Atan2(dlon, dlat)
-
-	return &Attitude{
-		Pitch: pitch,
-		Yaw:   yaw,
-	}, nil
-}
-
-// Updates during the Run state.
-func (p *PiPoint) run(param *Param) {
-	switch param {
-	case p.gps:
-		p.rover.Set(p.gps.Get())
-	}
-
-	if !p.rover.Ok() || !p.base.Ok() {
-		// Location is invalid or old.
-		log.Println("run: skipping as invalid or old", p.rover.Ok(), p.base.Ok())
-		return
-	}
-
-	rover := p.rover.Get().(*Position)
-	base := p.base.Get().(*Position)
-
-	att, err := p.point(rover, base)
-	if err != nil {
-		log.Printf("point: %v\n", err)
-		return
-	}
-
-	if param == p.gps {
-		offset := p.offset.Get().(*Attitude)
-		p.pan.Set(WrapAngle(att.Yaw + offset.Yaw))
-		p.tilt.Set(WrapAngle(att.Pitch + offset.Pitch))
+	if state >= 0 && state < len(p.states) {
+		p.states[state].Update(param)
 	}
 }
 
@@ -207,10 +117,11 @@ func (p *PiPoint) Message(msg interface{}) {
 	case *common.GlobalPositionInt:
 		gps := msg.(*common.GlobalPositionInt)
 		p.gps.Set(&Position{
-			float64(gps.LAT) * 1e-7,
-			float64(gps.LON) * 1e-7,
-			float64(gps.ALT) * 1e-3,
-			float64(gps.HDG) * 1e-2,
+			Time:    float64(gps.TIME_BOOT_MS) * 1e-3,
+			Lat:     float64(gps.LAT) * 1e-7,
+			Lon:     float64(gps.LON) * 1e-7,
+			Alt:     float64(gps.ALT) * 1e-3,
+			Heading: float64(gps.HDG) * 1e-2,
 		})
 	case *common.Attitude:
 		att := msg.(*common.Attitude)
@@ -221,10 +132,4 @@ func (p *PiPoint) Message(msg interface{}) {
 		})
 	default:
 	}
-}
-
-// Called when the user marks that the rover and base are at the same
-// location.
-func (p *PiPoint) Fix() {
-	p.fix.Inc()
 }

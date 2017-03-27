@@ -1,17 +1,17 @@
 package pipoint
 
 import (
-	"testing"
-	"math"
 	"github.com/stretchr/testify/assert"
+	"math"
+	"testing"
 )
 
 func TestPointEast(t *testing.T) {
 	// ~7 km to the east.
-	rover := &Position{46.8, 8.3, 0, 0}
-	base := &Position{46.8, 8.2, 0, 0}
+	rover := &Position{Lat: 46.8, Lon: 8.3}
+	base := &Position{Lat: 46.8, Lon: 8.2}
 
-	at, err := NewPiPoint().point(rover, base)
+	at, err := point(rover, base)
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
@@ -21,10 +21,10 @@ func TestPointEast(t *testing.T) {
 
 func TestPointWest(t *testing.T) {
 	// ~7 km to the west.
-	rover := &Position{46.8, 8.1, 0, 0}
-	base := &Position{46.8, 8.2, 0, 0}
+	rover := &Position{Lat: 46.8, Lon: 8.1}
+	base := &Position{Lat: 46.8, Lon: 8.2}
 
-	at, err := NewPiPoint().point(rover, base)
+	at, err := point(rover, base)
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
@@ -34,10 +34,10 @@ func TestPointWest(t *testing.T) {
 
 func TestPointNorth(t *testing.T) {
 	// ~10 km to the north.
-	rover := &Position{46.9, 8.2, 0, 0}
-	base := &Position{46.8, 8.2, 0, 0}
+	rover := &Position{Lat:46.9, Lon: 8.2}
+	base := &Position{Lat:46.8, Lon: 8.2}
 
-	at, err := NewPiPoint().point(rover, base)
+	at, err := point(rover, base)
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
@@ -47,10 +47,10 @@ func TestPointNorth(t *testing.T) {
 
 func TestPointSouth(t *testing.T) {
 	// ~10 km to the south.
-	rover := &Position{46.7, 8.2, 0, 0}
-	base := &Position{46.8, 8.2, 0, 0}
+	rover := &Position{Lat:46.7, Lon: 8.2}
+	base := &Position{Lat:46.8, Lon: 8.2}
 
-	at, err := NewPiPoint().point(rover, base)
+	at, err := point(rover, base)
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
@@ -60,10 +60,10 @@ func TestPointSouth(t *testing.T) {
 
 func TestPointUp(t *testing.T) {
 	// ~50 degrees up.
-	rover := &Position{46.8, 8.21, 1000, 0}
-	base := &Position{46.8, 8.2, 0, 0}
+	rover := &Position{Lat:46.8, Lon: 8.21, Alt: 1000}
+	base := &Position{Lat:46.8, Lon: 8.2, Alt: 0}
 
-	at, err := NewPiPoint().point(rover, base)
+	at, err := point(rover, base)
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
@@ -73,10 +73,10 @@ func TestPointUp(t *testing.T) {
 
 func TestPointDown(t *testing.T) {
 	// ~50 degrees down.
-	rover := &Position{46.8, 8.21, 0, 0}
-	base := &Position{46.8, 8.2, 1000, 0}
+	rover := &Position{Lat:46.8, Lon: 8.21, Alt: 0}
+	base := &Position{Lat:46.8, Lon: 8.2, Alt: 1000}
 
-	at, err := NewPiPoint().point(rover, base)
+	at, err := point(rover, base)
 	if err != nil {
 		t.Errorf("%#v", err)
 	}

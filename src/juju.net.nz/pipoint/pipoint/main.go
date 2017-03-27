@@ -31,11 +31,6 @@ func main() {
 			gobot.Every(20*time.Millisecond, p.Tick)
 		})
 
-	robot.AddCommand("fix", func(params map[string]interface{}) interface{} {
-		p.Fix()
-		return "OK"
-	})
-
 	master.AddRobot(robot)
 	log.Println("Start")
 	master.Start()
