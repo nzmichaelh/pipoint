@@ -107,14 +107,6 @@ func (ps *Params) visitOne(p *Param, visitor LeafVisitor, path []string, v refle
 // Respond with the Prometheus and Params as metrics.
 func (ps *Params) Metrics(w http.ResponseWriter, req *http.Request) {
 	var buf bytes.Buffer
-	enc := expfmt.NewEncoder(&buf, expfmt.FmtText)
-	mfs, err := prometheus.DefaultGatherer.Gather()
-
-	if err == nil {
-		for _, mf := range mfs {
-			enc.Encode(mf)
-		}
-	}
 
 	ps.WalkLeaves(func(p *Param, path []string, v reflect.Value) {
 		name := makeName(path, "_")
@@ -130,6 +122,15 @@ func (ps *Params) Metrics(w http.ResponseWriter, req *http.Request) {
 		}
 	})
 
+	enc := expfmt.NewEncoder(&buf, expfmt.FmtText)
+	mfs, err := prometheus.DefaultGatherer.Gather()
+
+	if err == nil {
+		for _, mf := range mfs {
+			enc.Encode(mf)
+		}
+	}
+	
 	header := w.Header()
 	header.Set("Content-Type", string(expfmt.FmtText))
 	w.Write(buf.Bytes())
