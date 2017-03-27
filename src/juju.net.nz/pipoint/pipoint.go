@@ -1,6 +1,8 @@
 package pipoint
 
 import (
+	"log"
+	
 	common "gobot.io/x/gobot/platforms/mavlink/common"
 )
 
@@ -46,16 +48,29 @@ type PiPoint struct {
 	pan  *Servo
 	tilt *Servo
 
+	latPred *LinPred
+	lonPred *LinPred
+	altPred *LinPred
+
 	cycle  float64
 	states []State
+
+	elog *EventLogger
+	log *log.Logger
 }
 
 // Create a new camera pointer.
 func NewPiPoint() *PiPoint {
 	p := &PiPoint{
 		Params: NewParams("pipoint"),
+		latPred: &LinPred{},
+		lonPred: &LinPred{},
+		altPred: &LinPred{},
+		elog: NewEventLogger("pipoint"),
 	}
 
+	p.log = p.elog.logger
+	
 	p.states = []State{
 		&LocateState{pi: p},
 		&RunState{pi: p},
@@ -88,22 +103,50 @@ func NewPiPoint() *PiPoint {
 	return p
 }
 
-func (p *PiPoint) Tick() {
-	p.tick.SetFloat64(Now())
-	p.pan.Tick()
-	p.tilt.Tick()
+func (pi *PiPoint) Tick() {
+	now := Now()
+	pi.tick.SetFloat64(now)
+
+	pred := &Position{
+		Time: now,
+		Lat: pi.latPred.GetEx(now),
+		Lon: pi.lonPred.GetEx(now),
+		Alt: pi.altPred.GetEx(now),
+	}
+
+	pi.pred.Set(pred)
+	
+	pi.pan.Tick()
+	pi.tilt.Tick()
 }
 
 func (p *PiPoint) check(code int, cond bool) bool {
 	return !cond
 }
 
+func (pi *PiPoint) predict(gps *Position) {
+	now := Now()
+
+	pi.latPred.SetEx(gps.Lat, now)
+	pi.lonPred.SetEx(gps.Lon, now)
+	pi.altPred.SetEx(gps.Alt, now)
+}
+
 func (p *PiPoint) update(param *Param) {
+	switch param {
+	case p.gps:
+		if param.Ok() {
+			p.predict(param.Get().(*Position))
+		}
+	}
+
 	state := p.state.GetInt()
 
 	if state >= 0 && state < len(p.states) {
 		p.states[state].Update(param)
 	}
+
+	p.log.Printf("%s %T %#v\n", param.name, param.Get(), param.Get())
 }
 
 // Dispatch a MAVLink message.
