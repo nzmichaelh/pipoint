@@ -52,8 +52,6 @@ type PiPoint struct {
 	tilt *Servo
 
 	cycle float64
-	// TODO: de-hack.
-	lock  bool
 }
 
 // Create a new camera pointer.
@@ -191,12 +189,10 @@ func (p *PiPoint) run(param *Param) {
 		return
 	}
 
-	if !p.lock {
-		p.lock = true
+	if param == p.gps {
 		offset := p.offset.Get().(*Attitude)
 		p.pan.Set(WrapAngle(att.Yaw + offset.Yaw))
 		p.tilt.Set(WrapAngle(att.Pitch + offset.Pitch))
-		p.lock = false
 	}
 }
 

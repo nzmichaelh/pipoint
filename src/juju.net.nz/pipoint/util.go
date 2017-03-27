@@ -26,8 +26,17 @@ func WrapAngle(v float64) float64 {
 	return v
 }
 
+var nowOverride *float64
+
 // The current system time.
 func Now() float64 {
+	if nowOverride != nil {
+		return *nowOverride
+	}
 	// Pulled out so it can be mocked.
 	return float64(time.Now().UnixNano()) * 1e-9
+}
+
+func OverrideNow(now float64) {
+	nowOverride = &now
 }

@@ -25,6 +25,7 @@ type Servo struct {
 	pv     *Param
 	pwm    *PwmPin
 	filter *Lowpass
+	pred *LinPred
 }
 
 func NewServo(name string, params *Params) *Servo {
@@ -41,6 +42,7 @@ func NewServo(name string, params *Params) *Servo {
 		sp: params.New(name + ".sp"),
 		pv: params.New(name + ".pv"),
 		filter: &Lowpass{},
+		pred: &LinPred{},
 	}
 
 	return s
@@ -48,12 +50,13 @@ func NewServo(name string, params *Params) *Servo {
 
 func (s *Servo) Set(angle float64) {
 	s.sp.SetFloat64(angle)
+	s.pred.Set(angle)
 }
 
 func (s *Servo) Tick() {
 	params := s.params.Get().(*ServoParams)
 
-	angle := s.sp.GetFloat64()
+	angle := s.pred.Get()
 	angle = s.filter.StepEx(angle, params.Tau)
 
 	// Convert to pulse width.

@@ -7,18 +7,22 @@ type LinPred struct {
 	v     float64
 }
 
-func (l *LinPred) Feed(x float64) {
-	l.FeedEx(x, Now())
+func (l *LinPred) Set(x float64) {
+	l.SetEx(x, Now())
 }
 
-func (l *LinPred) FeedEx(x, now float64) {
+func (l *LinPred) SetEx(x, now float64) {
 	if l.stamp == 0 {
 		// First run
 		l.v = 0
 	} else {
 		dt := now - l.stamp
 		dx := x - l.x
-		l.v = dx / dt
+		if dt <= 0 {
+			l.v = 0
+		} else {
+			l.v = dx / dt
+		}
 	}
 	l.x = x
 	l.stamp = now
