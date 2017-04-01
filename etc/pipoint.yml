@@ -1,0 +1,23 @@
+pipoint:
+  state: 0
+  pantilt:
+    offset:
+      yaw: -2.6
+      pitch: -1.570
+    pan:
+      pin: 0
+      sp: .1
+      max: 2.55
+      min: 0.50
+      high: 2.50
+      low: 0.65
+      tau: 0.5
+    tilt:
+      pin: 1
+      sp: -1.0
+      max: 2.2
+      min: 0.95
+      low: 0.95
+      high: 1.92
+      span: 1.570
+      tau: 0.5
