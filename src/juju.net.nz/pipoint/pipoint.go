@@ -33,6 +33,7 @@ type PiPoint struct {
 	state *Param
 
 	tick       *Param
+	messages   *Param
 	heartbeats *Param
 	heartbeat  *Param
 	attitude   *Param
@@ -78,6 +79,7 @@ func NewPiPoint() *PiPoint {
 	}
 
 	p.tick = p.Params.New("tick")
+	p.messages = p.Params.NewWith("rover.messages", 0)
 
 	p.state = p.Params.NewWith("state", 0)
 	p.heartbeat = p.Params.NewWith("heartbeat", &common.Heartbeat{})
@@ -157,14 +159,14 @@ func (p *PiPoint) Message(msg interface{}) {
 		p.heartbeat.Set(msg.(*common.Heartbeat))
 	case *common.SysStatus:
 		p.sysStatus.Set(msg.(*common.SysStatus))
-	case *common.GlobalPositionInt:
-		gps := msg.(*common.GlobalPositionInt)
+	case *common.GpsRawInt:
+		gps := msg.(*common.GpsRawInt)
 		p.gps.Set(&Position{
-			Time:    float64(gps.TIME_BOOT_MS) * 1e-3,
+			Time:    float64(gps.TIME_USEC) * 1e-6,
 			Lat:     float64(gps.LAT) * 1e-7,
 			Lon:     float64(gps.LON) * 1e-7,
 			Alt:     float64(gps.ALT) * 1e-3,
-			Heading: float64(gps.HDG) * 1e-2,
+			Heading: float64(gps.COG) * 1e-2,
 		})
 	case *common.Attitude:
 		att := msg.(*common.Attitude)
@@ -175,4 +177,7 @@ func (p *PiPoint) Message(msg interface{}) {
 		})
 	default:
 	}
+
+	p.messages.Inc()
+	p.log.Printf("%s %T %#v\n", "message", msg, msg)
 }
