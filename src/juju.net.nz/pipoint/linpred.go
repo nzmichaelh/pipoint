@@ -2,21 +2,23 @@ package pipoint
 
 // A velocity based linear predictive filter.
 type LinPred struct {
-	x     float64
-	stamp float64
-	v     float64
+	x       float64
+	stamp   float64
+	updated float64
+	v       float64
 }
 
 func (l *LinPred) Set(x float64) {
-	l.SetEx(x, Now())
+	now := Now()
+	l.SetEx(x, now, now)
 }
 
-func (l *LinPred) SetEx(x, now float64) {
+func (l *LinPred) SetEx(x, now, stamp float64) {
 	if l.stamp == 0 {
 		// First run
 		l.v = 0
 	} else {
-		dt := now - l.stamp
+		dt := stamp - l.stamp
 		dx := x - l.x
 		if dt <= 0 {
 			l.v = 0
@@ -25,7 +27,8 @@ func (l *LinPred) SetEx(x, now float64) {
 		}
 	}
 	l.x = x
-	l.stamp = now
+	l.stamp = stamp
+	l.updated = now
 }
 
 func (l *LinPred) Get() float64 {
@@ -33,7 +36,7 @@ func (l *LinPred) Get() float64 {
 }
 
 func (l *LinPred) GetEx(now float64) float64 {
-	dt := now - l.stamp
+	dt := now - l.updated
 	if dt < 0 {
 		dt = 0
 	} else if dt > 2 {

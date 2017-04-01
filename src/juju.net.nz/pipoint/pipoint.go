@@ -129,9 +129,9 @@ func (p *PiPoint) check(code int, cond bool) bool {
 func (pi *PiPoint) predict(gps *Position) {
 	now := Now()
 
-	pi.latPred.SetEx(gps.Lat, now)
-	pi.lonPred.SetEx(gps.Lon, now)
-	pi.altPred.SetEx(gps.Alt, now)
+	pi.latPred.SetEx(gps.Lat, now, gps.Time)
+	pi.lonPred.SetEx(gps.Lon, now, gps.Time)
+	pi.altPred.SetEx(gps.Alt, now, gps.Time)
 }
 
 func (p *PiPoint) update(param *Param) {
