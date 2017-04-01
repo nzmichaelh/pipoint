@@ -2,7 +2,7 @@ package pipoint
 
 import (
 	"log"
-	
+
 	common "gobot.io/x/gobot/platforms/mavlink/common"
 )
 
@@ -57,21 +57,21 @@ type PiPoint struct {
 	states []State
 
 	elog *EventLogger
-	log *log.Logger
+	log  *log.Logger
 }
 
 // Create a new camera pointer.
 func NewPiPoint() *PiPoint {
 	p := &PiPoint{
-		Params: NewParams("pipoint"),
+		Params:  NewParams("pipoint"),
 		latPred: &LinPred{},
 		lonPred: &LinPred{},
 		altPred: &LinPred{},
-		elog: NewEventLogger("pipoint"),
+		elog:    NewEventLogger("pipoint"),
 	}
 
 	p.log = p.elog.logger
-	
+
 	p.states = []State{
 		&LocateState{pi: p},
 		&RunState{pi: p},
@@ -111,13 +111,13 @@ func (pi *PiPoint) Tick() {
 
 	pred := &Position{
 		Time: now,
-		Lat: pi.latPred.GetEx(now),
-		Lon: pi.lonPred.GetEx(now),
-		Alt: pi.altPred.GetEx(now),
+		Lat:  pi.latPred.GetEx(now),
+		Lon:  pi.lonPred.GetEx(now),
+		Alt:  pi.altPred.GetEx(now),
 	}
 
 	pi.pred.Set(pred)
-	
+
 	pi.pan.Tick()
 	pi.tilt.Tick()
 }
