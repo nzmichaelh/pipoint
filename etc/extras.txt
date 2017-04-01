@@ -1,0 +1,3 @@
+mavlink stop-all
+mavlink start -b 57600 -m custom -x
+mavlink stream -r 5 -d /dev/ttyS1 -s GPS_RAW_INT
