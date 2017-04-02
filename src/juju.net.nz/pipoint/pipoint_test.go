@@ -10,7 +10,7 @@ func TestPointEast(t *testing.T) {
 	rover := &NEUPosition{North: 2000, East: 3100}
 	base := &NEUPosition{North: 2000, East: 3000}
 
-	at, err := point(rover, base)
+	at, err := point(rover, base, &NEUPosition{})
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
@@ -22,7 +22,7 @@ func TestPointWest(t *testing.T) {
 	rover := &NEUPosition{North: 2000, East: 2900}
 	base := &NEUPosition{North: 2000, East: 3000}
 
-	at, err := point(rover, base)
+	at, err := point(rover, base, &NEUPosition{})
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
@@ -34,7 +34,7 @@ func TestPointNorth(t *testing.T) {
 	rover := &NEUPosition{North:2100, East: 3000}
 	base := &NEUPosition{North:2000, East: 3000}
 
-	at, err := point(rover, base)
+	at, err := point(rover, base, &NEUPosition{})
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
@@ -46,7 +46,7 @@ func TestPointSouth(t *testing.T) {
 	rover := &NEUPosition{North:1900, East: 3000}
 	base := &NEUPosition{North:2000, East: 3000}
 
-	at, err := point(rover, base)
+	at, err := point(rover, base, &NEUPosition{})
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
@@ -59,7 +59,7 @@ func TestPointUp(t *testing.T) {
 	rover := &NEUPosition{North:2000, East: 4000, Up: 1000}
 	base := &NEUPosition{North:2000, East: 3000, Up: 0}
 
-	at, err := point(rover, base)
+	at, err := point(rover, base, &NEUPosition{})
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
@@ -72,7 +72,7 @@ func TestPointDown(t *testing.T) {
 	rover := &NEUPosition{North:2000, East: 4000, Up: 0}
 	base := &NEUPosition{North:2000, East: 3000, Up: 1000}
 
-	at, err := point(rover, base)
+	at, err := point(rover, base, &NEUPosition{})
 	if err != nil {
 		t.Errorf("%#v", err)
 	}
