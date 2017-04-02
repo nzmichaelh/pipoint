@@ -6,22 +6,6 @@ import (
 	common "gobot.io/x/gobot/platforms/mavlink/common"
 )
 
-// Geographic coordinates.
-type Position struct {
-	Time    float64
-	Lat     float64
-	Lon     float64
-	Alt     float64
-	Heading float64
-}
-
-// Orientation of a body.
-type Attitude struct {
-	Roll  float64
-	Pitch float64
-	Yaw   float64
-}
-
 type State interface {
 	Update(param *Param)
 }
@@ -38,6 +22,8 @@ type PiPoint struct {
 	heartbeat  *Param
 	attitude   *Param
 	gps        *Param
+	neu        *Param
+	baseOffset *Param
 	pred       *Param
 	rover      *Param
 	base       *Param
@@ -85,12 +71,14 @@ func NewPiPoint() *PiPoint {
 	p.heartbeat = p.Params.NewWith("heartbeat", &common.Heartbeat{})
 	p.heartbeats = p.Params.New("heartbeat")
 
-	p.gps = p.Params.New("gps.position")
-	p.pred = p.Params.New("pred.position")
+	p.gps = p.Params.New("gps")
+	p.neu = p.Params.New("position")
+	p.pred = p.Params.New("pred")
 
 	p.attitude = p.Params.New("rover.attitude")
 	p.rover = p.Params.New("rover.position")
 	p.base = p.Params.New("base.position")
+	p.baseOffset = p.Params.NewWith("base.offset", &NEUPosition{})
 
 	p.sysStatus = p.Params.New("rover.status")
 
@@ -135,13 +123,6 @@ func (pi *PiPoint) predict(gps *Position) {
 }
 
 func (p *PiPoint) update(param *Param) {
-	switch param {
-	case p.gps:
-		if param.Ok() {
-			p.predict(param.Get().(*Position))
-		}
-	}
-
 	state := p.state.GetInt()
 
 	if state >= 0 && state < len(p.states) {
@@ -168,6 +149,7 @@ func (p *PiPoint) Message(msg interface{}) {
 			Alt:     float64(gps.ALT) * 1e-3,
 			Heading: float64(gps.COG) * 1e-2,
 		})
+		p.neu.Set(p.gps.Get().(*Position).ToNEU())
 	case *common.Attitude:
 		att := msg.(*common.Attitude)
 		p.attitude.Set(&Attitude{
