@@ -130,7 +130,7 @@ func (ps *Params) Metrics(w http.ResponseWriter, req *http.Request) {
 			enc.Encode(mf)
 		}
 	}
-	
+
 	header := w.Header()
 	header.Set("Content-Type", string(expfmt.FmtText))
 	w.Write(buf.Bytes())

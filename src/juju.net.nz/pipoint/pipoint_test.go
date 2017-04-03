@@ -1,9 +1,10 @@
 package pipoint
 
 import (
-	"github.com/stretchr/testify/assert"
 	"math"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPointEast(t *testing.T) {
@@ -31,8 +32,8 @@ func TestPointWest(t *testing.T) {
 }
 
 func TestPointNorth(t *testing.T) {
-	rover := &NEUPosition{North:2100, East: 3000}
-	base := &NEUPosition{North:2000, East: 3000}
+	rover := &NEUPosition{North: 2100, East: 3000}
+	base := &NEUPosition{North: 2000, East: 3000}
 
 	at, err := point(rover, base, &NEUPosition{})
 	if err != nil {
@@ -43,8 +44,8 @@ func TestPointNorth(t *testing.T) {
 }
 
 func TestPointSouth(t *testing.T) {
-	rover := &NEUPosition{North:1900, East: 3000}
-	base := &NEUPosition{North:2000, East: 3000}
+	rover := &NEUPosition{North: 1900, East: 3000}
+	base := &NEUPosition{North: 2000, East: 3000}
 
 	at, err := point(rover, base, &NEUPosition{})
 	if err != nil {
@@ -56,8 +57,8 @@ func TestPointSouth(t *testing.T) {
 
 func TestPointUp(t *testing.T) {
 	// ~45 degrees up.
-	rover := &NEUPosition{North:2000, East: 4000, Up: 1000}
-	base := &NEUPosition{North:2000, East: 3000, Up: 0}
+	rover := &NEUPosition{North: 2000, East: 4000, Up: 1000}
+	base := &NEUPosition{North: 2000, East: 3000, Up: 0}
 
 	at, err := point(rover, base, &NEUPosition{})
 	if err != nil {
@@ -69,8 +70,8 @@ func TestPointUp(t *testing.T) {
 
 func TestPointDown(t *testing.T) {
 	// ~45 degrees down.
-	rover := &NEUPosition{North:2000, East: 4000, Up: 0}
-	base := &NEUPosition{North:2000, East: 3000, Up: 1000}
+	rover := &NEUPosition{North: 2000, East: 4000, Up: 0}
+	base := &NEUPosition{North: 2000, East: 3000, Up: 1000}
 
 	at, err := point(rover, base, &NEUPosition{})
 	if err != nil {

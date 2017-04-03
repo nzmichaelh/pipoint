@@ -15,7 +15,7 @@ type ServoParams struct {
 	Low  float64
 	High float64
 
-	Tau  float64
+	Tau float64
 }
 
 // A servo on a pin with limits, demand, and actual position.
@@ -36,10 +36,10 @@ func NewServo(name string, params *Params) *Servo {
 			Low:  1.1,
 			High: 1.9,
 			Span: math.Pi,
-			Tau: 1.0,
+			Tau:  1.0,
 		}),
-		sp: params.New(name + ".sp"),
-		pv: params.New(name + ".pv"),
+		sp:     params.New(name + ".sp"),
+		pv:     params.New(name + ".pv"),
 		filter: &Lowpass{},
 	}
 

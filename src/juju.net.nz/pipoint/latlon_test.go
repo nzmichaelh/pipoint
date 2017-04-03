@@ -1,9 +1,10 @@
 package pipoint
 
 import (
+	"fmt"
 	"math"
 	"testing"
-	"fmt"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,6 +29,6 @@ func TestLonLength(t *testing.T) {
 }
 
 func ExampleLatLength() {
-	fmt.Println(int(LatLength(46.8 * math.Pi/180)))
+	fmt.Println(int(LatLength(46.8 * math.Pi / 180)))
 	// Output: 111166
 }
