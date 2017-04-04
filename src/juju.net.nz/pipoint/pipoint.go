@@ -78,12 +78,12 @@ func NewPiPoint() *PiPoint {
 		&CycleState{pi: p},
 	}
 
-	p.tick = p.Params.New("tick")
-	p.messages = p.Params.NewWith("rover.messages", 0)
+	p.tick = p.Params.NewNum("tick")
+	p.messages = p.Params.NewNum("rover.messages")
 
-	p.state = p.Params.NewWith("state", 0)
+	p.state = p.Params.NewNum("state")
 	p.heartbeat = p.Params.NewWith("heartbeat", &common.Heartbeat{})
-	p.heartbeats = p.Params.New("heartbeat")
+	p.heartbeats = p.Params.NewNum("heartbeat")
 
 	p.gps = p.Params.New("gps")
 	p.neu = p.Params.New("position")

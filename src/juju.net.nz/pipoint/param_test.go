@@ -15,8 +15,9 @@
 package pipoint
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParam(t *testing.T) {
@@ -68,5 +69,24 @@ func TestParamStruct(t *testing.T) {
 	// Trying to set a different type causes an error.
 	assert.Panics(t, func() {
 		p.Set(1.0)
+	})
+}
+
+func TestParamNumber(t *testing.T) {
+	ps := Params{}
+	p := ps.NewNum("blob")
+
+	// Defaults to zero.
+	assert.Equal(t, p.GetFloat64(), 0.0)
+
+	// Can set to ints or floats
+	p.SetFloat64(3.5)
+	assert.Equal(t, p.GetFloat64(), 3.5)
+	p.SetInt(17)
+	assert.Equal(t, p.GetInt(), 17)
+
+	// Setting to a non-number panics.
+	assert.Panics(t, func() {
+		p.Set(&TestParamStructT{})
 	})
 }

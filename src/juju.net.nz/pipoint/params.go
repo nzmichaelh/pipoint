@@ -63,6 +63,18 @@ func (ps *Params) New(name string) *Param {
 	return p
 }
 
+// Create a new number param in this group.  The Param is zero and
+// invalid.
+func (ps *Params) NewNum(name string) *Param {
+	p := &Param{
+		name:   name,
+		value:  0.0,
+		params: ps,
+	}
+	ps.params = append(ps.params, p)
+	return p
+}
+
 // Create a new, valid Param in this group using the given value.
 func (ps *Params) NewWith(name string, value interface{}) *Param {
 	p := &Param{
@@ -118,21 +130,37 @@ func (ps *Params) visitOne(p *Param, visitor LeafVisitor, path []string, v refle
 	}
 }
 
+func format(name string, v reflect.Value) string {
+	switch v.Kind() {
+	case reflect.Invalid:
+		return ""
+	case reflect.String:
+		if v.String() != "" {
+			return fmt.Sprintf("%s{value=\"%s\"} 1", name, v)
+		} else {
+			return ""
+		}
+	case reflect.Float64, reflect.Float32:
+		vf := v.Float()
+		if float64(int(vf)) == vf {
+			return fmt.Sprintf("%s %v", name, int(vf))
+		} else {
+			return fmt.Sprintf("%s %v", name, v)
+		}
+	default:
+		return fmt.Sprintf("%s %v", name, v)
+	}
+}
+
 // Respond with the Prometheus and Params as metrics.
 func (ps *Params) Metrics(w http.ResponseWriter, req *http.Request) {
 	var buf bytes.Buffer
 
 	ps.WalkLeaves(func(p *Param, path []string, v reflect.Value) {
 		name := makeName(path, "_")
-		switch v.Kind() {
-		case reflect.Invalid:
-			break
-		case reflect.String:
-			if v.String() != "" {
-				buf.WriteString(fmt.Sprintf("%s{value=\"%s\"} 1\n", name, v))
-			}
-		default:
-			buf.WriteString(fmt.Sprintf("%s %v\n", name, v))
+		f := format(name, v)
+		if f != "" {
+			buf.WriteString(f + "\n")
 		}
 	})
 

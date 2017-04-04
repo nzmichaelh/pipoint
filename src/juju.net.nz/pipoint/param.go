@@ -44,26 +44,49 @@ func (p *Param) Get() interface{} {
 }
 
 func (p *Param) GetFloat64() float64 {
-	if p.value == nil {
-		return 0
-	}
 	return p.value.(float64)
 }
 
 func (p *Param) GetInt() int {
-	if p.value == nil {
-		return 0
+	return int(p.GetFloat64())
+}
+
+func isNumber(value interface{}) bool {
+	if value == nil {
+		return false
 	}
-	return p.value.(int)
+
+	switch value.(type) {
+	case float64, int:
+		return true
+	default:
+		return false
+	}
 }
 
 // Set the value, update validity, and notify listeners.
 func (p *Param) Set(value interface{}) {
-	if p.value != nil && reflect.TypeOf(value) !=
-		reflect.TypeOf(p.value) {
+	if p.value == nil {
+		// OK, nothing set yet.
+	} else if isNumber(p.value) && isNumber(value) {
+		// Number -> number is fine.
+	} else if reflect.TypeOf(value) != reflect.TypeOf(p.value) {
 		panic(fmt.Sprintf("Type of %v changed from %v to %v",
 			p.name, p.value, value))
 	}
+
+	if isNumber(value) {
+		// Store all numbers as float64.
+		switch value.(type) {
+		case float64:
+			// No change
+		case int:
+			value = float64(value.(int))
+		default:
+			panic("Unsupported numeric type.")
+		}
+	}
+
 	p.value = value
 	p.updated = time.Now()
 	p.final = false

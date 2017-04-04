@@ -52,8 +52,8 @@ func NewServo(name string, params *Params) *Servo {
 			Span: math.Pi,
 			Tau:  1.0,
 		}),
-		sp:     params.New(name + ".sp"),
-		pv:     params.New(name + ".pv"),
+		sp:     params.NewNum(name + ".sp"),
+		pv:     params.NewNum(name + ".pv"),
 		filter: &Lowpass{},
 	}
 
