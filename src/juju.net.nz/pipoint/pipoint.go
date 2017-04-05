@@ -18,6 +18,7 @@ import (
 	"log"
 
 	common "gobot.io/x/gobot/platforms/mavlink/common"
+	"gobot.io/x/gobot/platforms/mqtt"
 )
 
 type State interface {
@@ -107,6 +108,10 @@ func NewPiPoint() *PiPoint {
 	return p
 }
 
+func (pi *PiPoint) AddMQTT(mqtt *mqtt.Adaptor) {
+	NewParamMQTTBridge(pi.Params, mqtt, "")
+}
+
 func (pi *PiPoint) Tick() {
 	now := Now()
 	pi.tick.SetFloat64(now)
@@ -143,7 +148,7 @@ func (p *PiPoint) update(param *Param) {
 		p.states[state].Update(param)
 	}
 
-	p.log.Printf("%s %T %#v\n", param.name, param.Get(), param.Get())
+	p.log.Printf("%s %T %#v\n", param.Name, param.Get(), param.Get())
 }
 
 // Dispatch a MAVLink message.

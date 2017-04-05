@@ -24,13 +24,18 @@ import (
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/api"
 	"gobot.io/x/gobot/platforms/mavlink"
+	"gobot.io/x/gobot/platforms/mqtt"
 )
 
 func main() {
-	adaptor := mavlink.NewUDPAdaptor(":14550")
-	driver := mavlink.NewDriver(adaptor)
-
 	p := pipoint.NewPiPoint()
+
+	mav := mavlink.NewUDPAdaptor(":14550")
+	driver := mavlink.NewDriver(mav)
+
+	mqtt := mqtt.NewAdaptor("tls://iot.juju.net.nz:8883", "pipoint")
+	p.AddMQTT(mqtt)
+	
 	http.HandleFunc("/metrics", p.Params.Metrics)
 
 	master := gobot.NewMaster()
@@ -38,7 +43,7 @@ func main() {
 	a.Start()
 
 	robot := gobot.NewRobot("pipoint",
-		[]gobot.Connection{adaptor},
+		[]gobot.Connection{mav, mqtt},
 		[]gobot.Device{driver},
 		func() {
 			driver.On(driver.Event(mavlink.MessageEvent), p.Message)
