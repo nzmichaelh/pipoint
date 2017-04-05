@@ -22,6 +22,10 @@ import (
 	"gobot.io/x/gobot/platforms/mqtt"
 )
 
+const (
+	publishLimit = 0.2
+)
+
 // ParamMQTTBridge exposes parameters over MQTT.
 type ParamMQTTBridge struct {
 	adaptor *mqtt.Adaptor
@@ -45,10 +49,15 @@ func NewParamMQTTBridge(params *Params, adaptor *mqtt.Adaptor, device string) *P
 }
 
 func (b *ParamMQTTBridge) updated(param *Param) {
-	name := b.prefix + "/" + strings.Replace(param.Name, ".", "/", -1)
+	base := b.prefix + "/"
 
-	if b.limiter.Ok(name, 0.2) {
-		value := fmt.Sprintf("%v", param.Get())
-		b.adaptor.Publish(name, []byte(value))
-	}
+	param.Walk(func(p *Param, path []string, value interface{}) {
+		name := base + strings.Join(path, "/")
+		name = strings.ToLower(strings.Replace(name, ".", "/", -1))
+
+		if b.limiter.Ok(name, publishLimit) {
+			formatted := fmt.Sprintf("%v", value)
+			b.adaptor.Publish(name, []byte(formatted))
+		}
+	})
 }

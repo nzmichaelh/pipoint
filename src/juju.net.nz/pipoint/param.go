@@ -109,3 +109,23 @@ func (p *Param) Inc() {
 func (p *Param) Final() {
 	p.final = true
 }
+
+type ValueVisitor func(p *Param, path []string, value interface{})
+
+func (p *Param) walk(visitor ValueVisitor, path []string, v reflect.Value) {
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Interface:
+		p.walk(visitor, path, v.Elem())
+	case reflect.Struct:
+		t := v.Type()
+		for i := 0; i < v.NumField(); i++ {
+			p.walk(visitor, append(path, t.Field(i).Name), v.Field(i))
+		}
+	default:
+		visitor(p, path, v.Interface())
+	}
+}
+
+func (p *Param) Walk(visitor ValueVisitor) {
+	p.walk(visitor, []string{p.Name}, reflect.ValueOf(p.Get()))
+}
