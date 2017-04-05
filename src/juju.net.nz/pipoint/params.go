@@ -31,7 +31,7 @@ type ParamListener func(p *Param)
 
 // Params is a group of parameters that can be listened to.
 type Params struct {
-	name      string
+	Name      string
 	viper     *viper.Viper
 	params    []*Param
 	listeners []ParamListener
@@ -39,7 +39,7 @@ type Params struct {
 
 func NewParams(name string) *Params {
 	ps := &Params{
-		name:  name,
+		Name:  name,
 		viper: viper.New(),
 	}
 
@@ -56,7 +56,7 @@ func NewParams(name string) *Params {
 // invalid.
 func (ps *Params) New(name string) *Param {
 	p := &Param{
-		name:   name,
+		Name:   name,
 		params: ps,
 	}
 	ps.params = append(ps.params, p)
@@ -67,7 +67,7 @@ func (ps *Params) New(name string) *Param {
 // invalid.
 func (ps *Params) NewNum(name string) *Param {
 	p := &Param{
-		name:   name,
+		Name:   name,
 		value:  0.0,
 		params: ps,
 	}
@@ -78,7 +78,7 @@ func (ps *Params) NewNum(name string) *Param {
 // Create a new, valid Param in this group using the given value.
 func (ps *Params) NewWith(name string, value interface{}) *Param {
 	p := &Param{
-		name:   name,
+		Name:   name,
 		params: ps,
 	}
 	p.Set(value)
@@ -107,7 +107,7 @@ type LeafVisitor func(p *Param, path []string, value reflect.Value)
 
 func (ps *Params) WalkLeaves(visitor LeafVisitor) {
 	for _, p := range ps.params {
-		ps.visitOne(p, visitor, []string{ps.name, p.name}, reflect.ValueOf(p.Get()))
+		ps.visitOne(p, visitor, []string{ps.Name, p.Name}, reflect.ValueOf(p.Get()))
 	}
 }
 

@@ -23,7 +23,7 @@ import (
 // Param is a value or a struct that has age and validity.  Updating a
 // Param also fires an event.
 type Param struct {
-	name    string
+	Name    string
 	value   interface{}
 	updated time.Time
 	params  *Params
@@ -72,7 +72,7 @@ func (p *Param) Set(value interface{}) {
 		// Number -> number is fine.
 	} else if reflect.TypeOf(value) != reflect.TypeOf(p.value) {
 		panic(fmt.Sprintf("Type of %v changed from %v to %v",
-			p.name, p.value, value))
+			p.Name, p.value, value))
 	}
 
 	if isNumber(value) {
