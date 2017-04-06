@@ -103,7 +103,7 @@ func (ps *Params) Walk(visitor func(*Param)) {
 	}
 }
 
-type LeafVisitor func(p *Param, path []string, value reflect.Value)
+type LeafVisitor func(p *Param, name string, value reflect.Value)
 
 func (ps *Params) WalkLeaves(visitor LeafVisitor) {
 	for _, p := range ps.params {
@@ -111,9 +111,9 @@ func (ps *Params) WalkLeaves(visitor LeafVisitor) {
 	}
 }
 
-func makeName(path []string, sep string) string {
+func makeName(path []string) string {
 	name := strings.Join(path, ".")
-	return strings.Replace(strings.ToLower(name), ".", sep, -1)
+	return strings.ToLower(name)
 }
 
 func (ps *Params) visitOne(p *Param, visitor LeafVisitor, path []string, v reflect.Value) {
@@ -126,7 +126,7 @@ func (ps *Params) visitOne(p *Param, visitor LeafVisitor, path []string, v refle
 			ps.visitOne(p, visitor, append(path, t.Field(i).Name), v.Field(i))
 		}
 	default:
-		visitor(p, path, v)
+		visitor(p, makeName(path), v)
 	}
 }
 
@@ -156,8 +156,8 @@ func format(name string, v reflect.Value) string {
 func (ps *Params) Metrics(w http.ResponseWriter, req *http.Request) {
 	var buf bytes.Buffer
 
-	ps.WalkLeaves(func(p *Param, path []string, v reflect.Value) {
-		name := makeName(path, "_")
+	ps.WalkLeaves(func(p *Param, name string, v reflect.Value) {
+		name = strings.Replace(name, ".", "_", -1)
 		f := format(name, v)
 		if f != "" {
 			buf.WriteString(f + "\n")
@@ -179,8 +179,7 @@ func (ps *Params) Metrics(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ps *Params) Load() {
-	ps.WalkLeaves(func(p *Param, path []string, v reflect.Value) {
-		name := makeName(path, ".")
+	ps.WalkLeaves(func(p *Param, name string, v reflect.Value) {
 		if !ps.viper.IsSet(name) {
 			return
 		}
