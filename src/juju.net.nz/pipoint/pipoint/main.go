@@ -34,6 +34,7 @@ func main() {
 	driver := mavlink.NewDriver(mav)
 
 	mqtt := mqtt.NewAdaptor("tls://iot.juju.net.nz:8883", "pipoint")
+	mqtt.SetAutoReconnect(true)
 	p.AddMQTT(mqtt)
 	
 	http.HandleFunc("/metrics", p.Params.Metrics)
