@@ -17,6 +17,8 @@ package pipoint
 import (
 	"fmt"
 	"os"
+	"reflect"
+	"strconv"
 	"strings"
 
 	"gobot.io/x/gobot/platforms/mqtt"
@@ -28,9 +30,11 @@ const (
 
 // ParamMQTTBridge exposes parameters over MQTT.
 type ParamMQTTBridge struct {
-	adaptor *mqtt.Adaptor
-	prefix  string
-	limiter *Limiter
+	params    *Params
+	adaptor   *mqtt.Adaptor
+	prefix    string
+	limiter   *Limiter
+	listening bool
 }
 
 func NewParamMQTTBridge(params *Params, adaptor *mqtt.Adaptor, device string) *ParamMQTTBridge {
@@ -40,15 +44,16 @@ func NewParamMQTTBridge(params *Params, adaptor *mqtt.Adaptor, device string) *P
 	prefix := strings.Join([]string{device, params.Name}, "/")
 
 	b := &ParamMQTTBridge{
+		params:  params,
 		adaptor: adaptor,
 		prefix:  prefix,
 		limiter: NewLimiter(),
 	}
-	params.Listen(b.updated)
+	params.Listen(b.publish)
 	return b
 }
 
-func (b *ParamMQTTBridge) updated(param *Param) {
+func (b *ParamMQTTBridge) publish(param *Param) {
 	base := b.prefix + "/"
 
 	param.Walk(func(p *Param, path []string, value interface{}) {
@@ -58,6 +63,46 @@ func (b *ParamMQTTBridge) updated(param *Param) {
 		if b.limiter.Ok(name, publishLimit) {
 			formatted := fmt.Sprintf("%v", value)
 			b.adaptor.Publish(name, []byte(formatted))
+		}
+	})
+
+	// TODO(michaelh): listen on connect.
+	if !b.listening {
+		b.listening = b.adaptor.OnTopic(b.prefix+"/#", b.recv)
+	}
+}
+
+func (b *ParamMQTTBridge) recv(topic string, data []byte) {
+	if !strings.HasSuffix(topic, "/set") {
+		return
+	}
+	if !strings.HasPrefix(topic, b.prefix) {
+		return
+	}
+
+	// Convert into relative dotted form.
+	parts := strings.Split(topic, "/")
+	// Drop the device/ and /set.
+	name := strings.Join(parts[1:len(parts)-1], ".")
+
+	// Parse the data to a number or string.
+	var next interface{}
+	value := string(data)
+	fp, err := strconv.ParseFloat(value, 64)
+
+	if err == nil {
+		next = fp
+	} else {
+		next = value
+	}
+
+	b.params.WalkLeaves(func(p *Param, pname string, v reflect.Value) {
+		if pname == name {
+			if v.CanSet() {
+				v.Set(reflect.ValueOf(next))
+			} else {
+				p.Set(next)
+			}
 		}
 	})
 }
