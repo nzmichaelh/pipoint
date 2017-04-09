@@ -26,6 +26,10 @@ const (
 	dt = time.Millisecond * 20
 )
 
+var (
+	Version = "dev"
+)
+
 type State interface {
 	Update(param *Param)
 }
@@ -36,6 +40,7 @@ type PiPoint struct {
 
 	state *Param
 
+	version *Param
 	tick       *Param
 	messages   *Param
 	heartbeats *Param
@@ -86,6 +91,7 @@ func NewPiPoint() *PiPoint {
 		&CycleState{pi: p},
 	}
 
+	p.version = p.Params.NewWith("build_label", Version)
 	p.tick = p.Params.NewNum("tick")
 	p.messages = p.Params.NewNum("rover.messages")
 
