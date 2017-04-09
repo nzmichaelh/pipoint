@@ -17,7 +17,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"time"
 
 	"juju.net.nz/pipoint"
 
@@ -33,10 +32,10 @@ func main() {
 	mav := mavlink.NewUDPAdaptor(":14550")
 	driver := mavlink.NewDriver(mav)
 
-	mqtt := mqtt.NewAdaptor("tls://iot.juju.net.nz:8883", "pipoint")
-	mqtt.SetAutoReconnect(true)
-	p.AddMQTT(mqtt)
-	
+	mq := mqtt.NewAdaptor("tls://iot.juju.net.nz:8883", "pipoint")
+	mq.SetAutoReconnect(true)
+	p.AddMQTT(mq)
+
 	http.HandleFunc("/metrics", p.Params.Metrics)
 
 	master := gobot.NewMaster()
@@ -44,11 +43,11 @@ func main() {
 	a.Start()
 
 	robot := gobot.NewRobot("pipoint",
-		[]gobot.Connection{mav, mqtt},
+		[]gobot.Connection{mav, mq},
 		[]gobot.Device{driver},
 		func() {
+			go p.Run()
 			driver.On(driver.Event(mavlink.MessageEvent), p.Message)
-			gobot.Every(20*time.Millisecond, p.Tick)
 		})
 
 	master.AddRobot(robot)

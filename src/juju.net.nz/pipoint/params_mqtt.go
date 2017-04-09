@@ -49,7 +49,14 @@ func NewParamMQTTBridge(params *Params, adaptor *mqtt.Adaptor, device string) *P
 		prefix:  prefix,
 		limiter: NewLimiter(),
 	}
-	params.Listen(b.publish)
+	changed := make(chan *Param, 10)
+	params.Listen(changed)
+
+	go func() {
+		for {
+			b.publish(<-changed)
+		}
+	}()
 	return b
 }
 

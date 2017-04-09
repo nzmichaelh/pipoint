@@ -40,12 +40,18 @@ func TestParamListen(t *testing.T) {
 	hits := 0
 	var val *Param
 
-	ps.Listen(func(p *Param) {
-		hits += 1
-		val = p
-	})
+	ch := make(ParamChannel, 10)
+	ps.Listen(ch)
 
 	p.SetFloat64(17)
+
+	close(ch)
+
+	for p := range(ch) {
+		hits += 1
+		val = p
+	}
+
 	assert.Equal(t, val, p)
 	assert.Equal(t, hits, 1)
 }

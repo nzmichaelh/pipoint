@@ -27,14 +27,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-type ParamListener func(p *Param)
+type ParamChannel chan *Param
 
 // Params is a group of parameters that can be listened to.
 type Params struct {
 	Name      string
 	viper     *viper.Viper
 	params    []*Param
-	listeners []ParamListener
+	listeners []ParamChannel
 }
 
 func NewParams(name string) *Params {
@@ -88,12 +88,12 @@ func (ps *Params) NewWith(name string, value interface{}) *Param {
 
 func (ps *Params) updated(p *Param) {
 	for _, l := range ps.listeners {
-		l(p)
+		l <- p
 	}
 }
 
 // Listen to changes on any parameter in this group.
-func (ps *Params) Listen(l ParamListener) {
+func (ps *Params) Listen(l ParamChannel) {
 	ps.listeners = append(ps.listeners, l)
 }
 

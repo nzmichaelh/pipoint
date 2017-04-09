@@ -16,9 +16,14 @@ package pipoint
 
 import (
 	"log"
+	"time"
 
 	common "gobot.io/x/gobot/platforms/mavlink/common"
 	"gobot.io/x/gobot/platforms/mqtt"
+)
+
+const (
+	dt = time.Millisecond * 20
 )
 
 type State interface {
@@ -54,11 +59,12 @@ type PiPoint struct {
 	lonPred *LinPred
 	altPred *LinPred
 
-	cycle  float64
 	states []State
 
 	elog *EventLogger
 	log  *log.Logger
+
+	param ParamChannel
 }
 
 // Create a new camera pointer.
@@ -69,6 +75,7 @@ func NewPiPoint() *PiPoint {
 		lonPred: &LinPred{},
 		altPred: &LinPred{},
 		elog:    NewEventLogger("pipoint"),
+		param:   make(ParamChannel, 10),
 	}
 
 	p.log = p.elog.logger
@@ -103,7 +110,7 @@ func NewPiPoint() *PiPoint {
 	p.pan = NewServo("pantilt.pan", p.Params)
 	p.tilt = NewServo("pantilt.tilt", p.Params)
 
-	p.Params.Listen(p.update)
+	p.Params.Listen(p.param)
 	p.Params.Load()
 	return p
 }
@@ -112,7 +119,20 @@ func (pi *PiPoint) AddMQTT(mqtt *mqtt.Adaptor) {
 	NewParamMQTTBridge(pi.Params, mqtt, "")
 }
 
-func (pi *PiPoint) Tick() {
+func (pi *PiPoint) Run() {
+	tick := time.NewTicker(dt)
+
+	for {
+		select {
+		case param := <-pi.param:
+			pi.update(param)
+		case <-tick.C:
+			pi.ticked()
+		}
+	}
+}
+
+func (pi *PiPoint) ticked() {
 	now := Now()
 	pi.tick.SetFloat64(now)
 
@@ -129,12 +149,8 @@ func (pi *PiPoint) Tick() {
 	pi.tilt.Tick()
 }
 
-func (p *PiPoint) check(code int, cond bool) bool {
-	return !cond
-}
-
 func (pi *PiPoint) predict(gps *Position) {
-	now := Now()
+	now := pi.tick.GetFloat64()
 
 	pi.latPred.SetEx(gps.Lat, now, gps.Time)
 	pi.lonPred.SetEx(gps.Lon, now, gps.Time)
