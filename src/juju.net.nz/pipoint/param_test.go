@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
@@ -48,7 +49,7 @@ func TestParamListen(t *testing.T) {
 	close(ch)
 
 	for p := range(ch) {
-		hits += 1
+		hits++
 		val = p
 	}
 
@@ -73,9 +74,7 @@ func TestParamStruct(t *testing.T) {
 	assert.Equal(t, v.C, 3.0)
 
 	// Trying to set a different type causes an error.
-	assert.Panics(t, func() {
-		p.Set(1.0)
-	})
+	assert.Error(t, p.Set(1.0))
 }
 
 func TestParamNumber(t *testing.T) {
@@ -91,8 +90,6 @@ func TestParamNumber(t *testing.T) {
 	p.SetInt(17)
 	assert.Equal(t, p.GetInt(), 17)
 
-	// Setting to a non-number panics.
-	assert.Panics(t, func() {
-		p.Set(&TestParamStructT{})
-	})
+	// Setting to a non-number casues an error.
+	assert.Error(t, p.Set(&TestParamStructT{}))
 }

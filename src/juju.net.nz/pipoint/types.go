@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
-// Geographic coordinates.
+// Position is a 3D point in geographic coordinates.
 type Position struct {
 	Time    float64
 	Lat     float64
@@ -23,7 +24,7 @@ type Position struct {
 	Heading float64
 }
 
-// On-surface coordinates.
+// NEUPosition is a 3D point on the local tangent plane.
 type NEUPosition struct {
 	Time  float64
 	North float64
@@ -31,13 +32,15 @@ type NEUPosition struct {
 	Up    float64
 }
 
-// Orientation of a body.
+// Attitude is the orientation of a body, often to the local tangent
+// plane.
 type Attitude struct {
 	Roll  float64
 	Pitch float64
 	Yaw   float64
 }
 
+// ToNEU converts a geographic position to local tangent plane.
 func (p *Position) ToNEU() *NEUPosition {
 	lat := AsRad(p.Lat)
 
@@ -49,6 +52,7 @@ func (p *Position) ToNEU() *NEUPosition {
 	}
 }
 
+// Sub returns piecewise this minus right.
 func (p *NEUPosition) Sub(right *NEUPosition) *NEUPosition {
 	return &NEUPosition{
 		Time:  p.Time - right.Time,
@@ -58,6 +62,7 @@ func (p *NEUPosition) Sub(right *NEUPosition) *NEUPosition {
 	}
 }
 
+// Add returns piecewise this plus right.
 func (p *NEUPosition) Add(right *NEUPosition) *NEUPosition {
 	return &NEUPosition{
 		Time:  p.Time + right.Time,

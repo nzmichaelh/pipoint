@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
@@ -30,7 +31,7 @@ type Param struct {
 	final   bool
 }
 
-// Return true if the value has been recently updated.
+// Ok return true if the value has been recently updated.
 func (p *Param) Ok() bool {
 	if p.final {
 		return true
@@ -39,14 +40,17 @@ func (p *Param) Ok() bool {
 	return elapsed.Seconds() < 3
 }
 
+// Get returns the current value which may be nil.
 func (p *Param) Get() interface{} {
 	return p.value
 }
 
+// GetFloat64 returns the current value as a float64.
 func (p *Param) GetFloat64() float64 {
 	return p.value.(float64)
 }
 
+// GetInt returns the current value as an int.
 func (p *Param) GetInt() int {
 	return int(p.GetFloat64())
 }
@@ -65,14 +69,14 @@ func isNumber(value interface{}) bool {
 }
 
 // Set the value, update validity, and notify listeners.
-func (p *Param) Set(value interface{}) {
+func (p *Param) Set(value interface{}) error {
 	if p.value == nil {
 		// OK, nothing set yet.
 	} else if isNumber(p.value) && isNumber(value) {
 		// Number -> number is fine.
 	} else if reflect.TypeOf(value) != reflect.TypeOf(p.value) {
-		panic(fmt.Sprintf("Type of %v changed from %v to %v",
-			p.Name, p.value, value))
+		return fmt.Errorf("Type of %v changed from %v to %v",
+			p.Name, p.value, value)
 	}
 
 	if isNumber(value) {
@@ -91,25 +95,30 @@ func (p *Param) Set(value interface{}) {
 	p.updated = time.Now()
 	p.final = false
 	p.params.updated(p)
+	return nil
 }
 
-func (p *Param) SetFloat64(value float64) {
-	p.Set(value)
+// SetFloat64 tries to update the value as a float64.
+func (p *Param) SetFloat64(value float64) error {
+	return p.Set(value)
 }
 
-func (p *Param) SetInt(value int) {
-	p.Set(value)
+// SetInt tries to update the value as an int.
+func (p *Param) SetInt(value int) error {
+	return p.Set(value)
 }
 
-func (p *Param) Inc() {
-	p.SetInt(p.GetInt() + 1)
+// Inc tries to increment the integer value.
+func (p *Param) Inc() error {
+	return p.SetInt(p.GetInt() + 1)
 }
 
-// Mark the param as always valid.
-func (p *Param) Final() {
+// Finalise marks the param as always valid.
+func (p *Param) Finalise() {
 	p.final = true
 }
 
+// ValueVisitor is a callback for leaves in the parameter tree.
 type ValueVisitor func(p *Param, path []string, value interface{})
 
 func (p *Param) walk(visitor ValueVisitor, path []string, v reflect.Value) {
@@ -126,6 +135,7 @@ func (p *Param) walk(visitor ValueVisitor, path []string, v reflect.Value) {
 	}
 }
 
+// Walk calls visitor on all leaf values of this parameter.
 func (p *Param) Walk(visitor ValueVisitor) {
 	p.walk(visitor, []string{p.Name}, reflect.ValueOf(p.Get()))
 }

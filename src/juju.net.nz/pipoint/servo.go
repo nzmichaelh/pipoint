@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
@@ -19,7 +20,7 @@ import (
 	"math"
 )
 
-// Parameters for a servo including limits.
+// ServoParams holds the parameters for a servo including limits.
 type ServoParams struct {
 	Pin  int
 	Span float64
@@ -32,7 +33,8 @@ type ServoParams struct {
 	Tau float64
 }
 
-// A servo on a pin with limits, demand, and actual position.
+// Servo is a servo on a pin with limits, demand, and actual
+// position.
 type Servo struct {
 	params *Param
 	sp     *Param
@@ -41,6 +43,7 @@ type Servo struct {
 	filter *Lowpass
 }
 
+// NewServo creates a new servo with params on the given tree.
 func NewServo(name string, params *Params) *Servo {
 	s := &Servo{
 		params: params.NewWith(name, &ServoParams{
@@ -60,10 +63,13 @@ func NewServo(name string, params *Params) *Servo {
 	return s
 }
 
+// Set updates the target angle in radians.  The servo is actually
+// updated on calling Tick().
 func (s *Servo) Set(angle float64) {
 	s.sp.SetFloat64(angle)
 }
 
+// Tick updates the servo output based on demand.  Call every ~20 ms.
 func (s *Servo) Tick() {
 	params := s.params.Get().(*ServoParams)
 
@@ -81,6 +87,7 @@ func (s *Servo) Tick() {
 		return
 	}
 	if s.pwm == nil || params.Pin != s.pwm.Pin {
+		// PWM pin has been set or changed.  Update.
 		if s.pwm != nil {
 			s.pwm.SetEnable(0)
 			s.pwm.UnExport()

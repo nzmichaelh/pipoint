@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
@@ -27,6 +28,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// ParamChannel passes changes to a Param.
 type ParamChannel chan *Param
 
 // Params is a group of parameters that can be listened to.
@@ -37,6 +39,7 @@ type Params struct {
 	listeners []ParamChannel
 }
 
+// NewParams creates a new group of parameters with the given root name.
 func NewParams(name string) *Params {
 	ps := &Params{
 		Name:  name,
@@ -52,8 +55,8 @@ func NewParams(name string) *Params {
 	return ps
 }
 
-// Create a new Param in this group.  The Param is uninitialised and
-// invalid.
+// New creates a new Param in this group.  The Param is uninitialised
+// and invalid.
 func (ps *Params) New(name string) *Param {
 	p := &Param{
 		Name:   name,
@@ -63,8 +66,8 @@ func (ps *Params) New(name string) *Param {
 	return p
 }
 
-// Create a new number param in this group.  The Param is zero and
-// invalid.
+// NewNum create a new number param in this group.  The Param is zero
+// and invalid.
 func (ps *Params) NewNum(name string) *Param {
 	p := &Param{
 		Name:   name,
@@ -75,7 +78,8 @@ func (ps *Params) NewNum(name string) *Param {
 	return p
 }
 
-// Create a new, valid Param in this group using the given value.
+// NewWith create a new, valid Param in this group using the given
+// value.
 func (ps *Params) NewWith(name string, value interface{}) *Param {
 	p := &Param{
 		Name:   name,
@@ -97,14 +101,10 @@ func (ps *Params) Listen(l ParamChannel) {
 	ps.listeners = append(ps.listeners, l)
 }
 
-func (ps *Params) Walk(visitor func(*Param)) {
-	for _, p := range ps.params {
-		visitor(p)
-	}
-}
-
+// LeafVisitor is called on every param value.
 type LeafVisitor func(p *Param, name string, value reflect.Value)
 
+// WalkLeaves calls the given visitor on every leaf value.
 func (ps *Params) WalkLeaves(visitor LeafVisitor) {
 	for _, p := range ps.params {
 		ps.visitOne(p, visitor, []string{ps.Name, p.Name}, reflect.ValueOf(p.Get()))
@@ -137,22 +137,21 @@ func format(name string, v reflect.Value) string {
 	case reflect.String:
 		if v.String() != "" {
 			return fmt.Sprintf("%s{value=\"%s\"} 1", name, v)
-		} else {
-			return ""
 		}
+		return ""
 	case reflect.Float64, reflect.Float32:
 		vf := v.Float()
 		if float64(int(vf)) == vf {
 			return fmt.Sprintf("%s %v", name, int(vf))
-		} else {
-			return fmt.Sprintf("%s %v", name, v)
 		}
+		return fmt.Sprintf("%s %v", name, v)
 	default:
 		return fmt.Sprintf("%s %v", name, v)
 	}
 }
 
-// Respond with the Prometheus and Params as metrics.
+// Metrics generates Prometheus/Borgmon compatible metrics from all
+// params.
 func (ps *Params) Metrics(w http.ResponseWriter, req *http.Request) {
 	var buf bytes.Buffer
 
@@ -178,6 +177,8 @@ func (ps *Params) Metrics(w http.ResponseWriter, req *http.Request) {
 	w.Write(buf.Bytes())
 }
 
+// Load fetches the supplied values from Viper and updates all
+// matching params.
 func (ps *Params) Load() {
 	ps.WalkLeaves(func(p *Param, name string, v reflect.Value) {
 		if !ps.viper.IsSet(name) {

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
@@ -29,9 +30,10 @@ func Scale(v, min0, max0, min1, max1 float64) float64 {
 	return v
 }
 
+// WrapAngle wraps an angle in radians to [-pi, pi)
 func WrapAngle(v float64) float64 {
 	// TODO: add tests.
-	for v > math.Pi {
+	for v >= math.Pi {
 		v -= math.Pi * 2
 	}
 	for v < -math.Pi {
@@ -42,7 +44,7 @@ func WrapAngle(v float64) float64 {
 
 var nowOverride *float64
 
-// The current system time.
+// Now returns the current system time in seconds.
 func Now() float64 {
 	if nowOverride != nil {
 		return *nowOverride
@@ -51,6 +53,7 @@ func Now() float64 {
 	return float64(time.Now().UnixNano()) * 1e-9
 }
 
+// OverrideNow allows overriding Now() for testing.
 func OverrideNow(now float64) {
 	nowOverride = &now
 }

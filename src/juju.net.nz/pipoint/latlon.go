@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
@@ -40,10 +41,12 @@ func LonLength(lat float64) float64 {
 	return p1*math.Cos(lat) + p2*math.Cos(3*lat) + p3*math.Cos(5*lat)
 }
 
+// AsRad converts degrees to radians.
 func AsRad(deg float64) float64 {
 	return deg * (math.Pi / 180)
 }
 
+// AsDeg convers radians to degrees.
 func AsDeg(rad float64) float64 {
 	return rad * (180 / math.Pi)
 }

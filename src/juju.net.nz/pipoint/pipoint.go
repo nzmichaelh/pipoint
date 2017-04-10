@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
@@ -27,20 +28,23 @@ const (
 )
 
 var (
+	// Version is the overall binary version.  Set from the
+	// build.
 	Version = "dev"
 )
 
+// State is a handler for the current state of the system.
 type State interface {
 	Update(param *Param)
 }
 
-// An automatic, GPS based system that points a camera at the rover.
+// PiPoint is an automatic, GPS based system that points a camera at the rover.
 type PiPoint struct {
 	Params *Params
 
 	state *Param
 
-	version *Param
+	version    *Param
 	tick       *Param
 	messages   *Param
 	heartbeats *Param
@@ -72,7 +76,7 @@ type PiPoint struct {
 	param ParamChannel
 }
 
-// Create a new camera pointer.
+// NewPiPoint creates a new camera pointer.
 func NewPiPoint() *PiPoint {
 	p := &PiPoint{
 		Params:  NewParams("pipoint"),
@@ -121,10 +125,13 @@ func NewPiPoint() *PiPoint {
 	return p
 }
 
+// AddMQTT adds a new MQTT connection that bridges between MQTT and
+// params.
 func (pi *PiPoint) AddMQTT(mqtt *mqtt.Adaptor) {
 	NewParamMQTTBridge(pi.Params, mqtt, "")
 }
 
+// Run is the main entry point that runs forever.
 func (pi *PiPoint) Run() {
 	tick := time.NewTicker(dt)
 
@@ -163,37 +170,37 @@ func (pi *PiPoint) predict(gps *Position) {
 	pi.altPred.SetEx(gps.Alt, now, gps.Time)
 }
 
-func (p *PiPoint) update(param *Param) {
-	state := p.state.GetInt()
+func (pi *PiPoint) update(param *Param) {
+	state := pi.state.GetInt()
 
-	if state >= 0 && state < len(p.states) {
-		p.states[state].Update(param)
+	if state >= 0 && state < len(pi.states) {
+		pi.states[state].Update(param)
 	}
 
-	p.log.Printf("%s %T %#v\n", param.Name, param.Get(), param.Get())
+	pi.log.Printf("%s %T %#v\n", param.Name, param.Get(), param.Get())
 }
 
-// Dispatch a MAVLink message.
-func (p *PiPoint) Message(msg interface{}) {
+// Message handles a MAVLink message.
+func (pi *PiPoint) Message(msg interface{}) {
 	switch msg.(type) {
 	case *common.Heartbeat:
-		p.heartbeats.Inc()
-		p.heartbeat.Set(msg.(*common.Heartbeat))
+		pi.heartbeats.Inc()
+		pi.heartbeat.Set(msg.(*common.Heartbeat))
 	case *common.SysStatus:
-		p.sysStatus.Set(msg.(*common.SysStatus))
+		pi.sysStatus.Set(msg.(*common.SysStatus))
 	case *common.GpsRawInt:
 		gps := msg.(*common.GpsRawInt)
-		p.gps.Set(&Position{
+		pi.gps.Set(&Position{
 			Time:    float64(gps.TIME_USEC) * 1e-6,
 			Lat:     float64(gps.LAT) * 1e-7,
 			Lon:     float64(gps.LON) * 1e-7,
 			Alt:     float64(gps.ALT) * 1e-3,
 			Heading: float64(gps.COG) * 1e-2,
 		})
-		p.neu.Set(p.gps.Get().(*Position).ToNEU())
+		pi.neu.Set(pi.gps.Get().(*Position).ToNEU())
 	case *common.Attitude:
 		att := msg.(*common.Attitude)
-		p.attitude.Set(&Attitude{
+		pi.attitude.Set(&Attitude{
 			float64(att.ROLL),
 			float64(att.PITCH),
 			float64(att.YAW),
@@ -201,6 +208,6 @@ func (p *PiPoint) Message(msg interface{}) {
 	default:
 	}
 
-	p.messages.Inc()
-	p.log.Printf("%s %T %#v\n", "message", msg, msg)
+	pi.messages.Inc()
+	pi.log.Printf("%s %T %#v\n", "message", msg, msg)
 }

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
@@ -21,6 +22,7 @@ import (
 	"gobot.io/x/gobot/sysfs"
 )
 
+// PwmPin represents a single pin on sysfs.
 type PwmPin struct {
 	Chip int
 	Pin  int
@@ -44,27 +46,32 @@ func (p *PwmPin) attr(attr string) string {
 	return fmt.Sprintf("/sys/class/pwm/pwmchip%d/pwm%d/%s", p.Chip, p.Pin, attr)
 }
 
+// SetEnable enables or disables the PWM output.
 func (p *PwmPin) SetEnable(val int) (err error) {
 	_, err = writeFile(p.attr("enable"), val)
 	return
 }
 
+// SetPeriod sets the PWM period in ns.
 func (p *PwmPin) SetPeriod(period int) (err error) {
 	_, err = writeFile(p.attr("period"), period)
 	return
 }
 
+// SetDuty sets the on time in ns.  Should be less than the period.
 func (p *PwmPin) SetDuty(duty int) (err error) {
 	_, err = writeFile(p.attr("duty_cycle"), duty)
 	return
 }
 
+// Export exports this pin.
 func (p *PwmPin) Export() (err error) {
 	path := p.chip() + "/export"
 	_, err = writeFile(path, p.Pin)
 	return
 }
 
+// UnExport removes the export for this pin.
 func (p *PwmPin) UnExport() (err error) {
 	path := p.chip() + "/unexport"
 	_, err = writeFile(path, p.Pin)

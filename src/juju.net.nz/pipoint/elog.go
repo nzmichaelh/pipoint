@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
@@ -30,6 +31,8 @@ type EventLogger struct {
 	msgs   chan []byte
 }
 
+// NewEventLogger creates a new event logger that writes to the given
+// base name.
 func NewEventLogger(name string) *EventLogger {
 	now := time.Now().Format(time.RFC3339)
 	fname := fmt.Sprintf("%s-%s.txt.gz", name, now)

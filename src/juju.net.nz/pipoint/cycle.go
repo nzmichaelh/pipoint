@@ -12,17 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
 	"math"
 )
 
+// CycleState cycles the pan/tilt in a circle.
 type CycleState struct {
 	pi    *PiPoint
 	cycle float64
 }
 
+// Update reacts to changes in parameters.
 func (s *CycleState) Update(param *Param) {
 	switch param {
 	case s.pi.tick:

@@ -12,18 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
+// LocateState runs initially to locate the base unit.
 type LocateState struct {
 	pi *PiPoint
 }
 
+// Update is called when a param is updated.
 func (s *LocateState) Update(param *Param) {
 	switch param {
 	case s.pi.neu:
 		s.pi.rover.Set(param.Get())
 		s.pi.base.Set(param.Get())
-		s.pi.base.Final()
+		s.pi.base.Finalise()
 	case s.pi.attitude:
 		s.pi.offset.Set(&Attitude{
 			Yaw: s.pi.attitude.Get().(*Attitude).Yaw,

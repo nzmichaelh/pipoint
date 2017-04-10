@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package main
 
 import (
@@ -32,6 +33,7 @@ func main() {
 	mav := mavlink.NewUDPAdaptor(":14550")
 	driver := mavlink.NewDriver(mav)
 
+	// TODO(michaelh): make configurable.
 	mq := mqtt.NewAdaptor("tls://iot.juju.net.nz:8883", "pipoint")
 	mq.SetAutoReconnect(true)
 	p.AddMQTT(mq)

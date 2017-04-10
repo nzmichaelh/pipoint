@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
@@ -37,6 +38,8 @@ type ParamMQTTBridge struct {
 	listening bool
 }
 
+// NewParamMQTTBridge creates a new two way connection between MQTT
+// and the given params.
 func NewParamMQTTBridge(params *Params, adaptor *mqtt.Adaptor, device string) *ParamMQTTBridge {
 	if device == "" {
 		device, _ = os.Hostname()

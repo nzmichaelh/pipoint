@@ -12,19 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
-// Limiter is a simple rate limiter.
+// Limiter is a simple keyed rate limiter.
 type Limiter struct {
 	stamp map[string]float64
 }
 
+// NewLimiter returns a new, initialised limiter.
 func NewLimiter() *Limiter {
 	return &Limiter{
 		stamp: make(map[string]float64),
 	}
 }
 
+// Ok returns true if at least dt seconds have passed since the last
+// time this function returned true.
 func (l *Limiter) Ok(key string, dt float64) bool {
 	now := Now()
 

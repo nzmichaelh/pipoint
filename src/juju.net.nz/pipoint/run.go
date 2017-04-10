@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+
 package pipoint
 
 import (
@@ -20,10 +21,12 @@ import (
 	"math"
 )
 
+// RunState executes when the camera is tracking the rover.
 type RunState struct {
 	pi *PiPoint
 }
 
+// Update is called when a param is updated.
 func (s *RunState) Update(param *Param) {
 	switch param {
 	case s.pi.neu:
