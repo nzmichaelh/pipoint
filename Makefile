@@ -15,20 +15,22 @@
 # limitations under the License.
 #
 
+PKG = juju.net.nz/x/pipoint
+
 VERSION = $(shell git describe --tags --always --dirty)
-LDFLAGS = -ldflags "-X juju.net.nz/pipoint.Version=$(VERSION)"
+LDFLAGS = -ldflags "-X $(PKG).Version=$(VERSION)"
 
 # Watch for changes, build, and push.
 watch:
-	watchman-make -p 'src/**/*.go' -t push
+	watchman-make -p '**.go' -t push
 
 run:
-	go get $(LDFLAGS) juju.net.nz/pipoint/pipoint
-	./bin/pipoint
+	go get $(LDFLAGS) $(PKG)/pipoint
+	$(GOPATH)/bin/pipoint
 
 check:
 	go test -v juju.net.nz/pipoint
 
 push:
-	GOARCH=arm GOARM=7 go get $(LDFLAGS) juju.net.nz/pipoint/pipoint
-	rsync -zt bin/linux_arm/pipoint pi-ed7:~
+	GOARCH=arm GOARM=7 go get $(LDFLAGS) $(PKG)/pipoint
+	rsync -zt $(GOPATH)/bin/linux_arm/pipoint pi-ed7:~

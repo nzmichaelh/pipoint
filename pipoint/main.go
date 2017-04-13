@@ -19,7 +19,7 @@ import (
 	"log"
 	"net/http"
 
-	"juju.net.nz/pipoint"
+	"juju.net.nz/x/pipoint"
 
 	"gobot.io/x/gobot"
 	"gobot.io/x/gobot/api"
