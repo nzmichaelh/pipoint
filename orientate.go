@@ -15,28 +15,44 @@
 
 package pipoint
 
-// LocateState runs initially to locate the base unit.
-type LocateState struct {
+// OrientateState runs to set the pan orientation.
+type OrientateState struct {
 	name string
-	pi   *PiPoint
+	pi *PiPoint
 }
 
-func (s *LocateState) Name() string {
-	return "Locate"
+func (s *OrientateState) Name() string {
+	return "Orientate"
 }
 
 // Update is called when a param is updated.
-func (s *LocateState) Update(param *Param) {
+func (s *OrientateState) Update(param *Param) {
 	switch param {
 	case s.pi.neu:
 		s.pi.rover.Set(param.Get())
-		s.pi.base.Set(param.Get())
-		s.pi.base.Finalise()
-	case s.pi.attitude:
-		s.pi.offset.Set(&Attitude{
-			Yaw: s.pi.attitude.Get().(*Attitude).Yaw,
-		})
 	case s.pi.mark:
 		s.pi.state.Inc()
 	}
+
+	if param != s.pi.rover {
+		return
+	}
+	
+	if !s.pi.rover.Ok() || !s.pi.base.Ok() {
+		return
+	}
+
+	rover := s.pi.rover.Get().(*NEUPosition)
+	base := s.pi.base.Get().(*NEUPosition)
+	offset := s.pi.baseOffset.Get().(*NEUPosition)
+
+	att, err := point(rover, base, offset)
+
+	if err != nil {
+		return
+	}
+
+	s.pi.offset.Set(&Attitude{
+		Yaw: -att.Yaw,
+	})
 }

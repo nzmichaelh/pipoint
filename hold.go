@@ -15,26 +15,19 @@
 
 package pipoint
 
-import (
-	"math"
-)
-
-// CycleState cycles the pan/tilt in a circle.
-type CycleState struct {
-	pi    *PiPoint
-	cycle float64
+// HoldState executes when the camera is tracking the rover.
+type HoldState struct {
+	pi *PiPoint
 }
 
-func (s *CycleState) Name() string {
-	return "Cycle"
+func (s *HoldState) Name() string {
+	return "Hold"
 }
 
-// Update reacts to changes in parameters.
-func (s *CycleState) Update(param *Param) {
+// Update is called when a param is updated.
+func (s *HoldState) Update(param *Param) {
 	switch param {
-	case s.pi.tick:
-		s.cycle += 0.02
-		s.pi.pan.Set(Scale(math.Cos(s.cycle), -1, 1, -math.Pi/2, math.Pi/2))
-		s.pi.tilt.Set(Scale(math.Sin(s.cycle), -1, 1, -math.Pi/2, 0))
+	case s.pi.mark:
+		s.pi.state.Dec()
 	}
 }

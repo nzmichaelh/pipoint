@@ -22,7 +22,7 @@ LDFLAGS = -ldflags "-X $(PKG).Version=$(VERSION)"
 
 # Watch for changes, build, and push.
 watch:
-	watchman-make -p '**.go' -t push
+	watchman-make -p '**/*.go' -t push
 
 run:
 	go get $(LDFLAGS) $(PKG)/pipoint

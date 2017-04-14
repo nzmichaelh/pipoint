@@ -26,34 +26,48 @@ type RunState struct {
 	pi *PiPoint
 }
 
+func (s *RunState) Name() string {
+	return "Run"
+}
+
 // Update is called when a param is updated.
 func (s *RunState) Update(param *Param) {
 	switch param {
 	case s.pi.neu:
 		s.pi.rover.Set(param.Get())
+	case s.pi.seconds:
+		if (param.GetInt()%5) == 0 && s.pi.vel.Ok() {
+			kph := s.pi.vel.GetFloat64() * 3.6
+			if kph >= 2 {
+				s.pi.audio.Say(fmt.Sprintf("%.0f kph", kph))
+			}
+		}
+	case s.pi.mark:
+		s.pi.state.Inc()
 	}
 
-	if !s.pi.rover.Ok() || !s.pi.base.Ok() {
-		// Location is invalid or old.
-		log.Println("run: skipping as invalid or old", s.pi.rover.Ok(), s.pi.base.Ok())
+	if param != s.pi.rover {
 		return
 	}
 
+	if !s.pi.rover.Ok() || !s.pi.base.Ok() {
+		return
+	}
+
+	
 	rover := s.pi.rover.Get().(*NEUPosition)
 	base := s.pi.base.Get().(*NEUPosition)
-	offset := s.pi.baseOffset.Get().(*NEUPosition)
+	baseOffset := s.pi.baseOffset.Get().(*NEUPosition)
 
-	att, err := point(rover, base, offset)
+	att, err := point(rover, base, baseOffset)
 	if err != nil {
 		log.Printf("point: %v\n", err)
 		return
 	}
 
-	if param == s.pi.neu {
-		offset := s.pi.offset.Get().(*Attitude)
-		s.pi.pan.Set(WrapAngle(att.Yaw + offset.Yaw))
-		s.pi.tilt.Set(WrapAngle(att.Pitch + offset.Pitch))
-	}
+	offset := s.pi.offset.Get().(*Attitude)
+	s.pi.pan.Set(WrapAngle(att.Yaw + offset.Yaw))
+	s.pi.tilt.Set(WrapAngle(att.Pitch + offset.Pitch))
 }
 
 func point(rover, base, offset *NEUPosition) (*Attitude, error) {

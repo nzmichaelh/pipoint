@@ -16,7 +16,6 @@
 package pipoint
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -36,6 +35,7 @@ var (
 
 // State is a handler for the current state of the system.
 type State interface {
+	Name() string
 	Update(param *Param)
 }
 
@@ -103,7 +103,9 @@ func NewPiPoint() *PiPoint {
 
 	p.states = []State{
 		&LocateState{pi: p},
+		&OrientateState{pi: p},
 		&RunState{pi: p},
+		&HoldState{pi: p},
 		&CycleState{pi: p},
 	}
 
@@ -198,18 +200,28 @@ func (pi *PiPoint) predict(gps *Position) {
 }
 
 func (pi *PiPoint) update(param *Param) {
-	state := pi.state.GetInt()
-
-	if state >= 0 && state < len(pi.states) {
-		pi.states[state].Update(param)
+	if state := pi.getState(); state != nil {
+		state.Update(param)
 	}
 
 	pi.announce(param)
 	pi.log.Printf("%s %T %#v\n", param.Name, param.Get(), param.Get())
 }
 
+func (pi *PiPoint) getState() State {
+	state := pi.state.GetInt()
+	if state >= 0 && state < len(pi.states) {
+		return pi.states[state]
+	}
+	return nil
+}
+
 func (pi *PiPoint) announce(param *Param) {
 	switch param {
+	case pi.state:
+		if state := pi.getState(); state != nil {
+			pi.audio.Say(state.Name())
+		}
 	case pi.link:
 		link := param.GetInt()
 		if link != pi.linkLast {
@@ -224,15 +236,6 @@ func (pi *PiPoint) announce(param *Param) {
 	case pi.gpsFix:
 		if param.GetInt() >= 3 {
 			pi.audio.Say("GPS ready")
-		}
-	case pi.mark:
-		pi.audio.Say("Mark")
-	case pi.seconds:
-		if (param.GetInt()%5) == 0 && pi.vel.Ok() {
-			kph := pi.vel.GetFloat64() * 3.6
-			if kph >= 1 {
-				pi.audio.Say(fmt.Sprintf("%.0f kph", kph))
-			}
 		}
 	}
 }

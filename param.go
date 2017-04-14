@@ -121,6 +121,11 @@ func (p *Param) Inc() error {
 	return p.SetInt(p.GetInt() + 1)
 }
 
+// Dec tries to decrement the integer value.
+func (p *Param) Dec() error {
+	return p.SetInt(p.GetInt() - 1)
+}
+
 // Finalise marks the param as always valid.
 func (p *Param) Finalise() {
 	p.final = true
