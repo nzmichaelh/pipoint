@@ -18,6 +18,11 @@ package pipoint
 import (
 	"math"
 	"time"
+	"encoding/hex"
+	"crypto/sha1"
+	"strings"
+	"regexp"
+	"io"
 )
 
 // Scale from one range to another.
@@ -56,4 +61,20 @@ func Now() float64 {
 // OverrideNow allows overriding Now() for testing.
 func OverrideNow(now float64) {
 	nowOverride = &now
+}
+
+// NormText returns a short, unique version of the string.
+func NormText(text string) string {
+	re := regexp.MustCompile("\\W")
+
+	hashed := sha1.New()
+	io.WriteString(hashed, text)
+	summary := hex.EncodeToString(hashed.Sum(nil))[:4]
+	
+	norm := text
+	if len(norm) > 20 {
+		norm = norm[:20]
+	}
+	norm = re.ReplaceAllString(text, "_")
+	return strings.ToLower(norm + "-" + summary)
 }
