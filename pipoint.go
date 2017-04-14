@@ -16,6 +16,7 @@
 package pipoint
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -46,17 +47,25 @@ type PiPoint struct {
 
 	version    *Param
 	tick       *Param
+	seconds    *Param
 	messages   *Param
 	heartbeats *Param
 	heartbeat  *Param
 	attitude   *Param
 	gps        *Param
+	gpsFix     *Param
 	neu        *Param
 	baseOffset *Param
 	pred       *Param
 	rover      *Param
 	base       *Param
 	sysStatus  *Param
+	link       *Param
+	linkLast   int
+	remote     *Param
+	command    *Param
+	mark       *Param
+	vel        *Param
 
 	sp     *Param
 	offset *Param
@@ -98,8 +107,14 @@ func NewPiPoint() *PiPoint {
 		&CycleState{pi: p},
 	}
 
+	p.link = p.Params.NewNum("link.status")
+	p.remote = p.Params.New("remote")
+	p.command = p.Params.NewNum("command")
+	p.mark = p.Params.NewNum("mark")
+
 	p.version = p.Params.NewWith("build_label", Version)
 	p.tick = p.Params.NewNum("tick")
+	p.seconds = p.Params.NewNum("tick")
 	p.messages = p.Params.NewNum("rover.messages")
 
 	p.state = p.Params.NewNum("state")
@@ -107,6 +122,8 @@ func NewPiPoint() *PiPoint {
 	p.heartbeats = p.Params.NewNum("heartbeat")
 
 	p.gps = p.Params.New("gps")
+	p.gpsFix = p.Params.NewNum("gps.fix")
+	p.vel = p.Params.NewNum("gps.vog")
 	p.neu = p.Params.New("position")
 	p.pred = p.Params.New("pred")
 
@@ -153,6 +170,11 @@ func (pi *PiPoint) Run() {
 func (pi *PiPoint) ticked() {
 	now := Now()
 	pi.tick.SetFloat64(now)
+	pi.seconds.UpdateInt(int(now))
+
+	if !pi.heartbeat.Ok() {
+		pi.link.UpdateInt(2)
+	}
 
 	pred := &Position{
 		Time: now,
@@ -182,16 +204,44 @@ func (pi *PiPoint) update(param *Param) {
 		pi.states[state].Update(param)
 	}
 
+	pi.announce(param)
 	pi.log.Printf("%s %T %#v\n", param.Name, param.Get(), param.Get())
+}
+
+func (pi *PiPoint) announce(param *Param) {
+	switch param {
+	case pi.link:
+		link := param.GetInt()
+		if link != pi.linkLast {
+			pi.linkLast = link
+			switch link {
+			case 1:
+				pi.audio.Say("Rover ready")
+			case 2:
+				pi.audio.Say("Rover offline")
+			}
+		}
+	case pi.gpsFix:
+		if param.GetInt() >= 3 {
+			pi.audio.Say("GPS ready")
+		}
+	case pi.mark:
+		pi.audio.Say("Mark")
+	case pi.seconds:
+		if (param.GetInt()%5) == 0 && pi.vel.Ok() {
+			kph := pi.vel.GetFloat64() * 3.6
+			if kph >= 1 {
+				pi.audio.Say(fmt.Sprintf("%.0f kph", kph))
+			}
+		}
+	}
 }
 
 // Message handles a MAVLink message.
 func (pi *PiPoint) Message(msg interface{}) {
 	switch msg.(type) {
 	case *common.Heartbeat:
-		if !pi.heartbeats.Ok() {
-			pi.audio.Say("Rover online")
-		}
+		pi.link.SetInt(1)
 		pi.heartbeats.Inc()
 		pi.heartbeat.Set(msg.(*common.Heartbeat))
 	case *common.SysStatus:
@@ -206,6 +256,8 @@ func (pi *PiPoint) Message(msg interface{}) {
 			Heading: float64(gps.COG) * 1e-2,
 		})
 		pi.neu.Set(pi.gps.Get().(*Position).ToNEU())
+		pi.vel.SetFloat64(float64(gps.VEL) * 1e-2)
+		pi.gpsFix.UpdateInt(int(gps.FIX_TYPE))
 	case *common.Attitude:
 		att := msg.(*common.Attitude)
 		pi.attitude.Set(&Attitude{
@@ -213,6 +265,20 @@ func (pi *PiPoint) Message(msg interface{}) {
 			float64(att.PITCH),
 			float64(att.YAW),
 		})
+	case *common.RcChannels:
+		remote := msg.(*common.RcChannels)
+		att := &Attitude{
+			Roll:  ServoToScale(remote.CHAN1_RAW),
+			Pitch: ServoToScale(remote.CHAN2_RAW),
+			Yaw:   ServoToScale(remote.CHAN4_RAW),
+		}
+		pi.remote.Set(att)
+		command := ScaleToPos(att.Yaw)
+		if changed, _ := pi.command.UpdateInt(command); changed {
+			if command == -2 {
+				pi.mark.Inc()
+			}
+		}
 	default:
 	}
 
