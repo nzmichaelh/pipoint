@@ -78,3 +78,23 @@ func NormText(text string) string {
 	norm = re.ReplaceAllString(text, "_")
 	return strings.ToLower(norm + "-" + summary)
 }
+
+func ServoToScale(ms uint16) float64 {
+	v := float64(ms)
+	return (v - 1500) / 500
+}
+
+func ScaleToPos(v float64) int {
+	switch {
+	case v < -0.5:
+		return -2
+	case v < -0.2:
+		return -1
+	case v < 0.2:
+		return 0
+	case v < 0.5:
+		return 1
+	default:
+		return 2
+	}
+}
