@@ -16,7 +16,7 @@
 package main
 
 import (
-	"log"
+	"flag"
 	"net/http"
 
 	"juju.net.nz/x/pipoint"
@@ -28,31 +28,43 @@ import (
 )
 
 func main() {
-	p := pipoint.NewPiPoint()
+	mqttUrl := flag.String("mqtt.url", "", "URI of the MQTT server, such as tls://iot.juju.net.nz:8883")
+	mavAddr := flag.String("mavlink.address", ":14550", "Address to listen on for Mavlink messages")
 
-	mav := mavlink.NewUDPAdaptor(":14550")
-	driver := mavlink.NewDriver(mav)
+	flag.Parse()
 
-	// TODO(michaelh): make configurable.
-	mq := mqtt.NewAdaptor("tls://iot.juju.net.nz:8883", "pipoint")
-	mq.SetAutoReconnect(true)
-	p.AddMQTT(mq)
+	var cons []gobot.Connection
+	var drivers []gobot.Device
 
-	http.HandleFunc("/metrics", p.Params.Metrics)
+	pi := pipoint.NewPiPoint()
+
+	if mavAddr != nil && *mavAddr != "" {
+		mav := mavlink.NewUDPAdaptor(*mavAddr)
+		cons = append(cons, mav)
+		driver := mavlink.NewDriver(mav)
+		drivers = append(drivers, driver)
+		driver.On(driver.Event(mavlink.MessageEvent), pi.Message)
+	}
+
+	if mqttUrl != nil && *mqttUrl != "" {
+		mq := mqtt.NewAdaptor(*mqttUrl, "pipoint")
+		cons = append(cons, mq)
+		mq.SetAutoReconnect(true)
+		pi.AddMQTT(mq)
+	}
+
+	http.HandleFunc("/metrics", pi.Params.Metrics)
 
 	master := gobot.NewMaster()
 	a := api.NewAPI(master)
 	a.Start()
 
 	robot := gobot.NewRobot("pipoint",
-		[]gobot.Connection{mav, mq},
-		[]gobot.Device{driver},
+		cons, drivers,
 		func() {
-			go p.Run()
-			driver.On(driver.Event(mavlink.MessageEvent), p.Message)
+			go pi.Run()
 		})
 
 	master.AddRobot(robot)
-	log.Println("Start")
 	master.Start()
 }
