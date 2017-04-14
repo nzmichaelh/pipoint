@@ -16,7 +16,6 @@
 package pipoint
 
 import (
-	"log"
 	"math"
 )
 
@@ -39,7 +38,7 @@ type Servo struct {
 	params *Param
 	sp     *Param
 	pv     *Param
-	pwm    *PwmPin
+	pwm    *ServoBlaster
 	filter *Lowpass
 }
 
@@ -88,27 +87,7 @@ func (s *Servo) Tick() {
 	}
 	if s.pwm == nil || params.Pin != s.pwm.Pin {
 		// PWM pin has been set or changed.  Update.
-		if s.pwm != nil {
-			s.pwm.SetEnable(0)
-			s.pwm.UnExport()
-		}
-		s.pwm = &PwmPin{Chip: 0, Pin: params.Pin}
-
-		var err error
-		s.pwm.Export()
-		err = s.pwm.SetEnable(0)
-		if err == nil {
-			err = s.pwm.SetPeriod(20e6)
-		}
-		if err == nil {
-			s.pwm.SetDuty(int(ms * 1e6))
-		}
-		if err == nil {
-			err = s.pwm.SetEnable(1)
-		}
-		if err != nil {
-			log.Printf("error: %v\n", err)
-		}
+		s.pwm = &ServoBlaster{Pin: params.Pin}
 	}
 	if s.pwm != nil {
 		s.pwm.SetDuty(int(ms * 1e6))
