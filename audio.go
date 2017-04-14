@@ -17,7 +17,6 @@ package pipoint
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 )
@@ -59,7 +58,6 @@ func (a *AudioOut) run() {
 
 	for {
 		cmd := <-a.queued
-		log.Println(cmd)
 		go func() {
 			cmd.Run()
 			done <- true
@@ -68,7 +66,6 @@ func (a *AudioOut) run() {
 		for c := false; !c; {
 			select {
 			case <-done:
-				log.Println(cmd, "done")
 				c = true
 			case <-a.queued:
 				// Discard anything that comes in
