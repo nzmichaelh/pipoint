@@ -108,6 +108,14 @@ func (p *Param) SetInt(value int) error {
 	return p.Set(value)
 }
 
+// SetInt tries to update the value as an int.
+func (p *Param) UpdateInt(value int) (bool, error) {
+	if p.GetInt() == value {
+		return false, nil
+	}
+	return true, p.Set(value)
+}
+
 // Inc tries to increment the integer value.
 func (p *Param) Inc() error {
 	return p.SetInt(p.GetInt() + 1)
