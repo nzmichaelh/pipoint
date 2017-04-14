@@ -74,6 +74,8 @@ type PiPoint struct {
 	log  *log.Logger
 
 	param ParamChannel
+
+	audio *AudioOut
 }
 
 // NewPiPoint creates a new camera pointer.
@@ -85,6 +87,7 @@ func NewPiPoint() *PiPoint {
 		altPred: &LinPred{},
 		elog:    NewEventLogger("pipoint"),
 		param:   make(ParamChannel, 10),
+		audio:   NewAudioOut(),
 	}
 
 	p.log = p.elog.logger
@@ -135,6 +138,8 @@ func (pi *PiPoint) AddMQTT(mqtt *mqtt.Adaptor) {
 func (pi *PiPoint) Run() {
 	tick := time.NewTicker(dt)
 
+	pi.audio.Say("Base ready")
+
 	for {
 		select {
 		case param := <-pi.param:
@@ -184,6 +189,9 @@ func (pi *PiPoint) update(param *Param) {
 func (pi *PiPoint) Message(msg interface{}) {
 	switch msg.(type) {
 	case *common.Heartbeat:
+		if !pi.heartbeats.Ok() {
+			pi.audio.Say("Rover online")
+		}
 		pi.heartbeats.Inc()
 		pi.heartbeat.Set(msg.(*common.Heartbeat))
 	case *common.SysStatus:
