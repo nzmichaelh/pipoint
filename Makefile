@@ -29,7 +29,7 @@ run:
 	$(GOPATH)/bin/pipoint
 
 check:
-	go test -v juju.net.nz/pipoint
+	go test -v $(PKG)
 
 push:
 	GOARCH=arm GOARM=7 go get $(LDFLAGS) $(PKG)/pipoint
