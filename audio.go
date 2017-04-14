@@ -54,24 +54,8 @@ func (a *AudioOut) Say(text string) {
 
 // run executes the commands to play the sounds.
 func (a *AudioOut) run() {
-	done := make(chan bool)
-
 	for {
 		cmd := <-a.queued
-		go func() {
-			cmd.Run()
-			done <- true
-		}()
-
-		for c := false; !c; {
-			select {
-			case <-done:
-				c = true
-			case <-a.queued:
-				// Discard anything that comes in
-				// while this command is running.
-				break
-			}
-		}
+		cmd.Run()
 	}
 }
