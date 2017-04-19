@@ -26,6 +26,7 @@ module plate () {
   color("grey")
       translate([r*2, h+r*2, d*3/4])
       rotate(90, [-1, 0, 0])
+      linear_extrude(0.5)
       text("pipoint v1", size=d/2+1);
 }
 
