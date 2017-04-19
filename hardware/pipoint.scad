@@ -35,15 +35,14 @@ module camera_mount() {
     difference () {
         union () {
             bracket();
-            translate([-5, 2, 0])
+            translate([-6, 2, 0])
                 rotate(90, [1, 0, 0])
                 plate();
         }
-        translate([-2, -1, 3])
+        translate([-3, -1, 3])
             rotate(90, [1, 0, 0])
             turnigy2k();
     }
 }
 
 camera_mount();
-

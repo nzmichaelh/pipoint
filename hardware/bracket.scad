@@ -2,7 +2,7 @@
 module bracket() {
        t = 3;
        w = 30;
-       h = 52;
+       h = 50;
        d = 36;
        sd = 25;
 
