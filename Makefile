@@ -31,7 +31,7 @@ run: build
 	$(GOPATH)/bin/pipoint
 
 check test:
-	go test -i $(PKG)
+	go get -t $(PKG)
 	go test -v $(PKG)
 
 push:
