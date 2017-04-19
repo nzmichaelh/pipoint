@@ -20,15 +20,17 @@ PKG = juju.net.nz/x/pipoint
 VERSION = $(shell git describe --tags --always --dirty)
 LDFLAGS = -ldflags "-X $(PKG).Version=$(VERSION)"
 
+build:
+	go get $(LDFLAGS) $(PKG)/pipoint
+
 # Watch for changes, build, and push.
 watch:
 	watchman-make -p '**/*.go' -t push
 
-run:
-	go get $(LDFLAGS) $(PKG)/pipoint
+run: build
 	$(GOPATH)/bin/pipoint
 
-check:
+check test:
 	go test -v $(PKG)
 
 push:
