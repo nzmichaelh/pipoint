@@ -78,11 +78,12 @@ func (b *ParamMQTTBridge) publish(param *Param) {
 
 	// TODO(michaelh): listen on connect.
 	if !b.listening {
-		b.listening = b.adaptor.OnTopic(b.prefix+"/#", b.recv)
+		b.listening = b.adaptor.On(b.prefix+"/#", b.recv)
 	}
 }
 
-func (b *ParamMQTTBridge) recv(topic string, data []byte) {
+func (b *ParamMQTTBridge) recv(msg mqtt.Message) {
+	topic := msg.Topic()
 	if !strings.HasSuffix(topic, "/set") {
 		return
 	}
@@ -97,7 +98,7 @@ func (b *ParamMQTTBridge) recv(topic string, data []byte) {
 
 	// Parse the data to a number or string.
 	var next interface{}
-	value := string(data)
+	value := string(msg.Payload())
 	fp, err := strconv.ParseFloat(value, 64)
 
 	if err == nil {

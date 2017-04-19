@@ -1,3 +1,4 @@
-[submodule "src/juju.net.nz/pipoint/vendor/gobot.io/x/gobot"]
+[submodule "vendor/gobot.io/x/gobot"]
 	path = vendor/gobot.io/x/gobot
-	url = juju:~/p/git/gobot
+	url = https://github.com/hybridgroup/gobot.git
+	branch = dev
