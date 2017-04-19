@@ -5,4 +5,7 @@ go:
 
 go_import_path: juju.net.nz/x/pipoint
 
-script: make build check
+script: make build && make coverage
+
+after_success:
+    - bash <(curl -s https://codecov.io/bash)

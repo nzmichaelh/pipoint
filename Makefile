@@ -30,9 +30,13 @@ watch:
 run: build
 	$(GOPATH)/bin/pipoint
 
-check test:
+check:
 	go get -t $(PKG)
-	go test -v $(PKG)
+	go test $(PKG)
+
+coverage:
+	go get -t $(PKG)
+	go test -race -coverprofile=coverage.txt -covermode=atomic $(PKG)
 
 push:
 	GOARCH=arm GOARM=7 go get $(LDFLAGS) $(PKG)/pipoint
