@@ -52,7 +52,9 @@ func (s *OrientateState) Update(param *Param) {
 		return
 	}
 
+	current := s.pi.offset.Get().(*Attitude)
 	s.pi.offset.Set(&Attitude{
 		Yaw: -att.Yaw,
+		Pitch: current.Pitch,
 	})
 }
