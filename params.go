@@ -188,7 +188,7 @@ func (ps *Params) Load() {
 		if v.CanSet() {
 			v.Set(reflect.ValueOf(next))
 		} else {
-			p.Set(next)
+			p.Update(next)
 		}
 	})
 }

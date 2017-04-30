@@ -16,6 +16,7 @@
 package pipoint
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -55,18 +56,26 @@ func (p *Param) GetInt() int {
 	return int(p.GetFloat64())
 }
 
-func isNumber(value interface{}) bool {
+func asNumber(value interface{}) (float64, error) {
 	if value == nil {
-		return false
+		return 0, errors.New("Is nil")
 	}
 
 	switch value.(type) {
-	case float64, int:
-		return true
+	case float64:
+		return value.(float64), nil
+	case int:
+		return float64(value.(int)), nil
 	default:
-		return false
+		return 0, errors.New("Not a number")
 	}
 }
+
+func isNumber(value interface{}) bool {
+	_, err := asNumber(value)
+	return err == nil
+}
+
 
 // Set the value, update validity, and notify listeners.
 func (p *Param) Set(value interface{}) error {
@@ -80,15 +89,7 @@ func (p *Param) Set(value interface{}) error {
 	}
 
 	if isNumber(value) {
-		// Store all numbers as float64.
-		switch value.(type) {
-		case float64:
-			// No change
-		case int:
-			value = float64(value.(int))
-		default:
-			panic("Unsupported numeric type.")
-		}
+		value, _ = asNumber(value)
 	}
 
 	p.value = value
@@ -96,6 +97,20 @@ func (p *Param) Set(value interface{}) error {
 	p.final = false
 	p.params.updated(p)
 	return nil
+}
+
+// Update tries to update the value.
+func (p *Param) Update(value interface{}) (bool, error) {
+	// Currently only handles numbers.
+	if isNumber(value) && isNumber(p.value) {
+		right, _ := asNumber(value)
+		left, _ := asNumber(p.value)
+
+		if left == right {
+			return false, nil
+		}
+	}
+	return true, p.Set(value)
 }
 
 // SetFloat64 tries to update the value as a float64.
@@ -108,7 +123,7 @@ func (p *Param) SetInt(value int) error {
 	return p.Set(value)
 }
 
-// SetInt tries to update the value as an int.
+// UpdateInt tries to update the value as an int.
 func (p *Param) UpdateInt(value int) (bool, error) {
 	if p.GetInt() == value {
 		return false, nil
