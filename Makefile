@@ -41,3 +41,5 @@ coverage:
 push:
 	GOARCH=arm GOARM=7 go get $(LDFLAGS) $(PKG)/pipoint
 	rsync -zt $(GOPATH)/bin/linux_arm/pipoint pi-ed7:~
+
+# Shh.  This is to test gitea.
