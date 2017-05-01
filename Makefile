@@ -31,8 +31,8 @@ run: build
 	$(GOPATH)/bin/pipoint
 
 check:
-	go get -t $(PKG)
-	go test $(PKG)
+	go get -t $(PKG)/...
+	go test $(shell go list $(PKG)/... | grep -vF /vendor)
 
 coverage:
 	go get -t $(PKG)
