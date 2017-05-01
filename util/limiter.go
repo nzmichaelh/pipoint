@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 
-package pipoint
+package util
 
 // Limiter is a simple keyed rate limiter.
 type Limiter struct {

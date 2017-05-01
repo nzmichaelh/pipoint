@@ -17,6 +17,9 @@ package pipoint
 
 import (
 	"math"
+
+	"juju.net.nz/x/pipoint/param"
+	"juju.net.nz/x/pipoint/util"
 )
 
 // ServoParams holds the parameters for a servo including limits.
@@ -35,15 +38,15 @@ type ServoParams struct {
 // Servo is a servo on a pin with limits, demand, and actual
 // position.
 type Servo struct {
-	params *Param
-	sp     *Param
-	pv     *Param
+	params *param.Param
+	sp     *param.Param
+	pv     *param.Param
 	pwm    *ServoBlaster
 	filter *Lowpass
 }
 
 // NewServo creates a new servo with params on the given tree.
-func NewServo(name string, params *Params) *Servo {
+func NewServo(name string, params *param.Params) *Servo {
 	s := &Servo{
 		params: params.NewWith(name, &ServoParams{
 			Pin:  -1,
@@ -78,7 +81,7 @@ func (s *Servo) Tick() {
 	// Convert to pulse width.
 	angle += math.Pi / 2
 
-	ms := Scale(angle, 0, params.Span, params.Low, params.High)
+	ms := util.Scale(angle, 0, params.Span, params.Low, params.High)
 	ms = math.Min(params.Max, math.Max(params.Min, ms))
 	s.pv.SetFloat64(ms)
 

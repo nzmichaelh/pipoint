@@ -19,14 +19,17 @@ import (
 	"math"
 	"testing"
 
+	"juju.net.nz/x/pipoint/param"
+	"juju.net.nz/x/pipoint/util"
+
 	"github.com/stretchr/testify/assert"
 )
 
 func TestServo(t *testing.T) {
-	p := &Params{}
+	p := &param.Params{}
 	s := NewServo("pan", p)
 
-	OverrideNow(1)
+	util.OverrideNow(1)
 
 	assert.InDelta(t, s.sp.GetFloat64(), 0, 0.001, "Starts at zero")
 

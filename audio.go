@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+
+	"juju.net.nz/x/pipoint/util"
 )
 
 // AudioOut can play files or speech.
@@ -42,7 +44,7 @@ func (a *AudioOut) Play(path string) {
 
 // Say plays a pre-recorded phrase, or falls back to espeak.
 func (a *AudioOut) Say(text string) {
-	rendered := fmt.Sprintf("phrase/%s.ogg", NormText(text))
+	rendered := fmt.Sprintf("phrase/%s.ogg", util.NormText(text))
 	fi, err := os.Stat(rendered)
 
 	if err == nil && fi.Mode().IsRegular() {

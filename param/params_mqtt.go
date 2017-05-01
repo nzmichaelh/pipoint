@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 
-package pipoint
+package param
 
 import (
 	"fmt"
@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"gobot.io/x/gobot/platforms/mqtt"
+	"juju.net.nz/x/pipoint/util"
 )
 
 const (
@@ -34,7 +35,7 @@ type ParamMQTTBridge struct {
 	params    *Params
 	adaptor   *mqtt.Adaptor
 	prefix    string
-	limiter   *Limiter
+	limiter   *util.Limiter
 	listening bool
 }
 
@@ -50,7 +51,7 @@ func NewParamMQTTBridge(params *Params, adaptor *mqtt.Adaptor, device string) *P
 		params:  params,
 		adaptor: adaptor,
 		prefix:  prefix,
-		limiter: NewLimiter(),
+		limiter: util.NewLimiter(),
 	}
 	changed := make(chan *Param, 10)
 	params.Listen(changed)

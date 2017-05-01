@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 
-package pipoint
+package param
 
 import (
 	"bytes"

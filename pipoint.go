@@ -19,6 +19,9 @@ import (
 	"log"
 	"time"
 
+	"juju.net.nz/x/pipoint/param"
+	"juju.net.nz/x/pipoint/util"
+
 	common "gobot.io/x/gobot/platforms/mavlink/common"
 	"gobot.io/x/gobot/platforms/mqtt"
 )
@@ -36,39 +39,39 @@ var (
 // State is a handler for the current state of the system.
 type State interface {
 	Name() string
-	Update(param *Param)
+	Update(param *param.Param)
 }
 
 // PiPoint is an automatic, GPS based system that points a camera at the rover.
 type PiPoint struct {
-	Params *Params
+	Params *param.Params
 
-	state *Param
+	state *param.Param
 
-	version    *Param
-	tick       *Param
-	seconds    *Param
-	messages   *Param
-	heartbeats *Param
-	heartbeat  *Param
-	attitude   *Param
-	gps        *Param
-	gpsFix     *Param
-	neu        *Param
-	baseOffset *Param
-	pred       *Param
-	rover      *Param
-	base       *Param
-	sysStatus  *Param
-	link       *Param
+	version    *param.Param
+	tick       *param.Param
+	seconds    *param.Param
+	messages   *param.Param
+	heartbeats *param.Param
+	heartbeat  *param.Param
+	attitude   *param.Param
+	gps        *param.Param
+	gpsFix     *param.Param
+	neu        *param.Param
+	baseOffset *param.Param
+	pred       *param.Param
+	rover      *param.Param
+	base       *param.Param
+	sysStatus  *param.Param
+	link       *param.Param
 	linkLast   int
-	remote     *Param
-	command    *Param
-	mark       *Param
-	vel        *Param
+	remote     *param.Param
+	command    *param.Param
+	mark       *param.Param
+	vel        *param.Param
 
-	sp     *Param
-	offset *Param
+	sp     *param.Param
+	offset *param.Param
 
 	pan  *Servo
 	tilt *Servo
@@ -82,7 +85,7 @@ type PiPoint struct {
 	elog *EventLogger
 	log  *log.Logger
 
-	param ParamChannel
+	param param.ParamChannel
 
 	audio *AudioOut
 }
@@ -90,12 +93,12 @@ type PiPoint struct {
 // NewPiPoint creates a new camera pointer.
 func NewPiPoint() *PiPoint {
 	p := &PiPoint{
-		Params:  NewParams("pipoint"),
+		Params:  param.NewParams("pipoint"),
 		latPred: &LinPred{},
 		lonPred: &LinPred{},
 		altPred: &LinPred{},
 		elog:    NewEventLogger("pipoint"),
-		param:   make(ParamChannel, 10),
+		param:   make(param.ParamChannel, 10),
 		audio:   NewAudioOut(),
 	}
 
@@ -150,7 +153,7 @@ func NewPiPoint() *PiPoint {
 // AddMQTT adds a new MQTT connection that bridges between MQTT and
 // params.
 func (pi *PiPoint) AddMQTT(mqtt *mqtt.Adaptor) {
-	NewParamMQTTBridge(pi.Params, mqtt, "")
+	param.NewParamMQTTBridge(pi.Params, mqtt, "")
 }
 
 // Run is the main entry point that runs forever.
@@ -170,7 +173,7 @@ func (pi *PiPoint) Run() {
 }
 
 func (pi *PiPoint) ticked() {
-	now := Now()
+	now := util.Now()
 	pi.tick.SetFloat64(now)
 	pi.seconds.UpdateInt(int(now))
 
@@ -199,7 +202,7 @@ func (pi *PiPoint) predict(gps *Position) {
 	pi.altPred.SetEx(gps.Alt, now, gps.Time)
 }
 
-func (pi *PiPoint) update(param *Param) {
+func (pi *PiPoint) update(param *param.Param) {
 	if state := pi.getState(); state != nil {
 		state.Update(param)
 	}
@@ -216,7 +219,7 @@ func (pi *PiPoint) getState() State {
 	return nil
 }
 
-func (pi *PiPoint) announce(param *Param) {
+func (pi *PiPoint) announce(param *param.Param) {
 	switch param {
 	case pi.state:
 		if state := pi.getState(); state != nil {
@@ -271,12 +274,12 @@ func (pi *PiPoint) Message(msg interface{}) {
 	case *common.RcChannels:
 		remote := msg.(*common.RcChannels)
 		att := &Attitude{
-			Roll:  ServoToScale(remote.CHAN1_RAW),
-			Pitch: ServoToScale(remote.CHAN2_RAW),
-			Yaw:   ServoToScale(remote.CHAN4_RAW),
+			Roll:  util.ServoToScale(remote.CHAN1_RAW),
+			Pitch: util.ServoToScale(remote.CHAN2_RAW),
+			Yaw:   util.ServoToScale(remote.CHAN4_RAW),
 		}
 		pi.remote.Set(att)
-		command := ScaleToPos(att.Yaw)
+		command := util.ScaleToPos(att.Yaw)
 		if changed, _ := pi.command.UpdateInt(command); changed {
 			if command == -2 {
 				pi.mark.Inc()

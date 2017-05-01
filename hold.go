@@ -15,6 +15,10 @@
 
 package pipoint
 
+import (
+	"juju.net.nz/x/pipoint/param"
+)
+
 // HoldState executes when the camera is tracking the rover.
 type HoldState struct {
 	pi *PiPoint
@@ -25,7 +29,7 @@ func (s *HoldState) Name() string {
 }
 
 // Update is called when a param is updated.
-func (s *HoldState) Update(param *Param) {
+func (s *HoldState) Update(param *param.Param) {
 	switch param {
 	case s.pi.mark:
 		s.pi.state.Dec()

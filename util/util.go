@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 
-package pipoint
+package util
 
 import (
 	"crypto/sha1"

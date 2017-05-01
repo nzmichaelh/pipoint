@@ -15,6 +15,10 @@
 
 package pipoint
 
+import (
+	"juju.net.nz/x/pipoint/param"
+)
+
 // LocateState runs initially to locate the base unit.
 type LocateState struct {
 	name string
@@ -26,7 +30,7 @@ func (s *LocateState) Name() string {
 }
 
 // Update is called when a param is updated.
-func (s *LocateState) Update(param *Param) {
+func (s *LocateState) Update(param *param.Param) {
 	switch param {
 	case s.pi.neu:
 		s.pi.rover.Set(param.Get())

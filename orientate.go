@@ -15,6 +15,10 @@
 
 package pipoint
 
+import (
+	"juju.net.nz/x/pipoint/param"
+)
+
 // OrientateState runs to set the pan orientation.
 type OrientateState struct {
 	name string
@@ -26,7 +30,7 @@ func (s *OrientateState) Name() string {
 }
 
 // Update is called when a param is updated.
-func (s *OrientateState) Update(param *Param) {
+func (s *OrientateState) Update(param *param.Param) {
 	switch param {
 	case s.pi.neu:
 		s.pi.rover.Set(param.Get())

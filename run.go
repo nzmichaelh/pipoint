@@ -19,6 +19,9 @@ import (
 	"fmt"
 	"log"
 	"math"
+
+	"juju.net.nz/x/pipoint/param"
+	"juju.net.nz/x/pipoint/util"
 )
 
 // RunState executes when the camera is tracking the rover.
@@ -31,7 +34,7 @@ func (s *RunState) Name() string {
 }
 
 // Update is called when a param is updated.
-func (s *RunState) Update(param *Param) {
+func (s *RunState) Update(param *param.Param) {
 	switch param {
 	case s.pi.neu:
 		s.pi.rover.Set(param.Get())
@@ -65,8 +68,8 @@ func (s *RunState) Update(param *Param) {
 	}
 
 	offset := s.pi.offset.Get().(*Attitude)
-	s.pi.pan.Set(WrapAngle(att.Yaw + offset.Yaw))
-	s.pi.tilt.Set(WrapAngle(att.Pitch + offset.Pitch))
+	s.pi.pan.Set(util.WrapAngle(att.Yaw + offset.Yaw))
+	s.pi.tilt.Set(util.WrapAngle(att.Pitch + offset.Pitch))
 }
 
 func point(rover, base, offset *NEUPosition) (*Attitude, error) {

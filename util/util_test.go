@@ -13,29 +13,25 @@
 // limitations under the License.
 //
 
-package pipoint
+package util
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestParamsFormat(t *testing.T) {
-	ps := Params{}
+func TestNormText(t *testing.T) {
+	assert.Equal(t, NormText("Foo"),
+		"foo-201a")
+	assert.Equal(t, NormText("Base location set"),
+		"base_location_set-4fe5")
+	assert.Equal(t, NormText("Lots%of--crazy"),
+		"lots_of__crazy-4921")
 
-	// Whole numbers print as ints.
-	p := ps.NewWith("foo", 17.0)
-	assert.Equal(t, format("foo", reflect.ValueOf(p.Get())), "foo 17")
-
-	p.SetFloat64(17.1)
-	assert.Equal(t, format("foo", reflect.ValueOf(p.Get())), "foo 17.1")
-
-	// Strings show only if set.
-	p2 := ps.NewWith("bar", "texty")
-	assert.Equal(t, format("foo", reflect.ValueOf(p2.Get())), "foo{value=\"texty\"} 1")
-
-	p2.Set("")
-	assert.Equal(t, format("foo", reflect.ValueOf(p2.Get())), "")
+	// No collisions.
+	assert.Equal(t, NormText("Rover online"),
+		"rover_online-f40c")
+	assert.Equal(t, NormText("Rover offline"),
+		"rover_offline-5951")
 }
