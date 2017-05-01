@@ -54,7 +54,6 @@ func (s *RunState) Update(param *Param) {
 		return
 	}
 
-	
 	rover := s.pi.rover.Get().(*NEUPosition)
 	base := s.pi.base.Get().(*NEUPosition)
 	baseOffset := s.pi.baseOffset.Get().(*NEUPosition)

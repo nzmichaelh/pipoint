@@ -18,7 +18,7 @@ package pipoint
 // OrientateState runs to set the pan orientation.
 type OrientateState struct {
 	name string
-	pi *PiPoint
+	pi   *PiPoint
 }
 
 func (s *OrientateState) Name() string {
@@ -37,7 +37,7 @@ func (s *OrientateState) Update(param *Param) {
 	if param != s.pi.rover {
 		return
 	}
-	
+
 	if !s.pi.rover.Ok() || !s.pi.base.Ok() {
 		return
 	}
@@ -54,7 +54,7 @@ func (s *OrientateState) Update(param *Param) {
 
 	current := s.pi.offset.Get().(*Attitude)
 	s.pi.offset.Set(&Attitude{
-		Yaw: -att.Yaw,
+		Yaw:   -att.Yaw,
 		Pitch: current.Pitch,
 	})
 }

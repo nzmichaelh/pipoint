@@ -29,7 +29,6 @@ func TestNormText(t *testing.T) {
 	assert.Equal(t, NormText("Lots%of--crazy"),
 		"lots_of__crazy-4921")
 
-	
 	// No collisions.
 	assert.Equal(t, NormText("Rover online"),
 		"rover_online-f40c")

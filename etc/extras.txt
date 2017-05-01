@@ -1,3 +1,5 @@
 mavlink stop-all
 mavlink start -b 57600 -m custom -x
 mavlink stream -r 5 -d /dev/ttyS1 -s GPS_RAW_INT
+mavlink stream -r 2 -d /dev/ttyS1 -s RC_CHANNELS
+mavlink stream -r 1 -d /dev/ttyS1 -s SYS_STATUS

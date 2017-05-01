@@ -16,13 +16,13 @@
 package pipoint
 
 import (
-	"math"
-	"time"
-	"encoding/hex"
 	"crypto/sha1"
-	"strings"
-	"regexp"
+	"encoding/hex"
 	"io"
+	"math"
+	"regexp"
+	"strings"
+	"time"
 )
 
 // Scale from one range to another.
@@ -70,7 +70,7 @@ func NormText(text string) string {
 	hashed := sha1.New()
 	io.WriteString(hashed, text)
 	summary := hex.EncodeToString(hashed.Sum(nil))[:4]
-	
+
 	norm := text
 	if len(norm) > 20 {
 		norm = norm[:20]

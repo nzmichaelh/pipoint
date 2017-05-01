@@ -48,7 +48,7 @@ func TestParamListen(t *testing.T) {
 
 	close(ch)
 
-	for p := range(ch) {
+	for p := range ch {
 		hits++
 		val = p
 	}

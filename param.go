@@ -76,7 +76,6 @@ func isNumber(value interface{}) bool {
 	return err == nil
 }
 
-
 // Set the value, update validity, and notify listeners.
 func (p *Param) Set(value interface{}) error {
 	if p.value == nil {
