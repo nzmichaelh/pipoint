@@ -46,7 +46,7 @@ func AsRad(deg float64) float64 {
 	return deg * (math.Pi / 180)
 }
 
-// AsDeg convers radians to degrees.
+// AsDeg converts radians to degrees.
 func AsDeg(rad float64) float64 {
 	return rad * (180 / math.Pi)
 }

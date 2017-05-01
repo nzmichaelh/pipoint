@@ -90,6 +90,6 @@ func TestParamNumber(t *testing.T) {
 	p.SetInt(17)
 	assert.Equal(t, p.GetInt(), 17)
 
-	// Setting to a non-number casues an error.
+	// Setting to a non-number causes an error.
 	assert.Error(t, p.Set(&TestParamStructT{}))
 }

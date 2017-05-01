@@ -22,7 +22,7 @@ type Lowpass struct {
 }
 
 // StepEx feeds v into the filter and returns the filtered value.  Tau
-// is the filter coefficent, where 1.0 is no filtering and 0.0 is no
+// is the filter coefficient, where 1.0 is no filtering and 0.0 is no
 // pass through.
 func (l *Lowpass) StepEx(v, tau float64) float64 {
 	l.Acc = tau*v + (1-tau)*l.Acc
