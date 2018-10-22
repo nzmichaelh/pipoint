@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-PKG = juju.net.nz/x/pipoint
+PKG = juju.nz/x/pipoint
 
 VERSION = $(shell git describe --tags --always --dirty)
 LDFLAGS = -ldflags "-X $(PKG).Version=$(VERSION)"

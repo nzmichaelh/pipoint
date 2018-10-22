@@ -16,7 +16,7 @@
 package pipoint
 
 import (
-	"juju.net.nz/x/pipoint/param"
+	"juju.nz/x/pipoint/param"
 )
 
 // OrientateState runs to set the pan orientation.

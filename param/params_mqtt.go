@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"gobot.io/x/gobot/platforms/mqtt"
-	"juju.net.nz/x/pipoint/util"
+	"juju.nz/x/pipoint/util"
 )
 
 const (

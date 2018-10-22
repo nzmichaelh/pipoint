@@ -19,8 +19,8 @@ import (
 	"log"
 	"time"
 
-	"juju.net.nz/x/pipoint/param"
-	"juju.net.nz/x/pipoint/util"
+	"juju.nz/x/pipoint/param"
+	"juju.nz/x/pipoint/util"
 
 	common "gobot.io/x/gobot/platforms/mavlink/common"
 	"gobot.io/x/gobot/platforms/mqtt"

@@ -20,7 +20,7 @@ import (
 	"os"
 	"os/exec"
 
-	"juju.net.nz/x/pipoint/util"
+	"juju.nz/x/pipoint/util"
 )
 
 // AudioOut can play files or speech.

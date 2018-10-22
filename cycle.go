@@ -18,8 +18,8 @@ package pipoint
 import (
 	"math"
 
-	"juju.net.nz/x/pipoint/param"
-	"juju.net.nz/x/pipoint/util"
+	"juju.nz/x/pipoint/param"
+	"juju.nz/x/pipoint/util"
 )
 
 // CycleState cycles the pan/tilt in a circle.

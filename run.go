@@ -20,8 +20,8 @@ import (
 	"log"
 	"math"
 
-	"juju.net.nz/x/pipoint/param"
-	"juju.net.nz/x/pipoint/util"
+	"juju.nz/x/pipoint/param"
+	"juju.nz/x/pipoint/util"
 )
 
 // RunState executes when the camera is tracking the rover.

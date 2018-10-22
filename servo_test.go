@@ -19,8 +19,8 @@ import (
 	"math"
 	"testing"
 
-	"juju.net.nz/x/pipoint/param"
-	"juju.net.nz/x/pipoint/util"
+	"juju.nz/x/pipoint/param"
+	"juju.nz/x/pipoint/util"
 
 	"github.com/stretchr/testify/assert"
 )

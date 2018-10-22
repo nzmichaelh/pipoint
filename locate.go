@@ -16,7 +16,7 @@
 package pipoint
 
 import (
-	"juju.net.nz/x/pipoint/param"
+	"juju.nz/x/pipoint/param"
 )
 
 // LocateState runs initially to locate the base unit.

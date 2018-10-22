@@ -31,7 +31,7 @@ In the base station:
 * A Linux laptop for display and control
 
 Assembling this is left as an exercise for the reader :)  There are some
-photos on [my blog](https://juju.net.nz/michaelh/blog/).
+photos on [my blog](https://juju.nz/michaelh/).
 
 ## Build
 
@@ -46,4 +46,4 @@ photos on [my blog](https://juju.net.nz/michaelh/blog/).
 # Note
 This is not an official Google product.
 
--- Michael Hope <michaelh@juju.net.nz> <mlhx@google.com>
+-- Michael Hope <michaelh@juju.nz> <mlhx@google.com>

@@ -16,7 +16,7 @@
 package pipoint
 
 import (
-	"juju.net.nz/x/pipoint/param"
+	"juju.nz/x/pipoint/param"
 )
 
 // HoldState executes when the camera is tracking the rover.

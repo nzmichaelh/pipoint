@@ -18,8 +18,8 @@ package pipoint
 import (
 	"math"
 
-	"juju.net.nz/x/pipoint/param"
-	"juju.net.nz/x/pipoint/util"
+	"juju.nz/x/pipoint/param"
+	"juju.nz/x/pipoint/util"
 )
 
 // ServoParams holds the parameters for a servo including limits.
